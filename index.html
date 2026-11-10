@@ -1,0 +1,2775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Code Odyssey">
+<meta name="description" content="Code Odyssey - learn Computational Thinking across 12 islands and 36 sub-stages with drag-and-drop block coding.">
+<title>Code Odyssey – Your Computational Thinking Journey</title>
+<style>
+/* ==========================================================
+   02-UI-SPEC-v3 – Complete CSS Stylesheet (verbatim)
+   ========================================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #090a16;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #e0e0ff;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── VIEW SWITCHING ── */
+.view-screen { display: none; width: 100vw; height: 100vh; flex-direction: column; }
+.view-screen.active { display: flex; }
+
+/* ── TOPBAR & BREADCRUMBS ── */
+.app-topbar {
+  background: linear-gradient(90deg, #111428, #1a1e3a);
+  border-bottom: 2px solid #00d4ff33;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.app-logo {
+  font-size: 20px; font-weight: 800;
+  background: linear-gradient(90deg, #00d4ff, #a855f7);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.btn-nav {
+  background: #1e1e3f; border: 1px solid #00d4ff44; color: #00d4ff;
+  padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-nav:hover { background: #00d4ff22; border-color: #00d4ff; color: #fff; }
+
+/* ── WORLD MAP SCREEN ── */
+#world-map-canvas { flex: 1; width: 100%; height: 100%; cursor: pointer; }
+
+/* ── ISLAND NODE SCREEN ── */
+#island-canvas { flex: 1; width: 100%; height: 100%; cursor: pointer; }
+
+/* ── WORKBENCH PUZZLE SCREEN ── */
+#workbench-body { flex: 1; display: flex; overflow: hidden; }
+#game-panel { flex: 62; position: relative; background: #070814; overflow: hidden; }
+#gameCanvas { display: block; width: 100%; height: 100%; }
+
+#objective-box {
+  position: absolute; top: 14px; left: 14px;
+  background: rgba(10, 12, 28, 0.85); border: 1px solid #00d4ff44;
+  border-radius: 10px; padding: 12px 16px; font-size: 13px;
+  backdrop-filter: blur(6px); max-width: 260px;
+}
+.obj-title { color: #00d4ff; font-weight: 700; text-transform: uppercase; font-size: 12px; margin-bottom: 6px; }
+.obj-item { display: flex; align-items: center; gap: 8px; color: #ccc; margin-bottom: 4px; }
+.obj-item.done { color: #666; text-decoration: line-through; }
+
+/* ── VISUAL BLOCK PALETTE & WORKSPACE ── */
+#block-panel { flex: 38; min-width: 360px; background: #0f1124; border-left: 2px solid #1e2242; display: flex; flex-direction: column; }
+#category-tabs { display: flex; background: #0a0c1a; border-bottom: 1px solid #1e2242; overflow-x: auto; flex-shrink: 0; }
+.cat-tab { padding: 10px 14px; font-size: 12px; font-weight: 700; color: #778; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+.cat-tab.active { color: #00d4ff; border-bottom-color: #00d4ff; background: #0f1124; }
+
+#block-palette { padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; background: #0c0e1e; border-bottom: 1px solid #1e2242; min-height: 90px; }
+#workspace-area { flex: 1; padding: 16px; overflow-y: auto; background: #090a18; border-inner: 1px solid #1a1c38; position: relative; }
+
+/* Visual Blocks Styling */
+.v-block {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 8px;
+  font-family: monospace; font-size: 12px; font-weight: 700; color: #fff; cursor: grab; user-select: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); transition: transform 0.15s;
+}
+.v-block:active { cursor: grabbing; transform: scale(0.98); }
+.v-block.exec-glowing { box-shadow: 0 0 16px #00ff88, 0 0 8px #fff; border-color: #00ff88; }
+
+.v-block.cat-action   { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.v-block.cat-control  { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+.v-block.cat-variable { background: linear-gradient(135deg, #d97706, #b45309); }
+.v-block.cat-sensor   { background: linear-gradient(135deg, #0284c7, #0369a1); }
+.v-block.cat-world    { background: linear-gradient(135deg, #059669, #047857); }
+
+.block-slot {
+  min-height: 42px; border: 2px dashed #2a2e54; border-radius: 8px; margin-bottom: 8px;
+  padding: 6px; display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.02);
+}
+.block-slot.drag-over { border-color: #00d4ff; background: rgba(0,214,255,0.08); }
+
+/* Controls & Console */
+#workbench-controls { padding: 12px; background: #0a0c1a; border-top: 1px solid #1e2242; display: flex; gap: 10px; align-items: center; }
+.btn-action { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; color: #fff; }
+#btnRun { background: linear-gradient(135deg, #00d4ff, #0088cc); }
+#btnReset { background: #1e1e3f; color: #aaa; flex: 0.5; }
+
+#console-output { height: 90px; background: #05060e; padding: 8px 12px; font-family: monospace; font-size: 11px; overflow-y: auto; border-top: 1px solid #1e2242; }
+.con-log { margin-bottom: 4px; color: #889; }
+.con-log.ok { color: #00ff88; }
+.con-log.err { color: #ff5555; }
+.con-log.info { color: #00d4ff; }
+
+/* ==========================================================
+   v3 additions (layout robustness, blocks, modals, iPad)
+   ========================================================== */
+html { height: 100%; }
+body { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+@supports (height: 100dvh) { body, .view-screen { height: 100dvh; } }
+#world-map-canvas, #island-canvas { display: block; min-height: 0; touch-action: manipulation; }
+#workbench-body, #block-panel, #workspace-area { min-height: 0; }
+button { font-family: inherit; }
+.topbar-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.topbar-sub { color: #8890c0; font-size: 12px; }
+.star-pill { background: #1a1d3a; border: 1px solid #ffd70055; color: #ffd700; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 13px; white-space: nowrap; }
+.btn-nav.danger { color: #ff8a8a; border-color: #ff555544; }
+.btn-nav.danger:hover { background: #ff555522; border-color: #ff5555; }
+#island-title { font-weight: 800; font-size: 16px; color: #fff; text-align: center; }
+.breadcrumbs { font-size: 13px; color: #99a; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.breadcrumbs a { color: #00d4ff; cursor: pointer; }
+.breadcrumbs a:hover { text-decoration: underline; }
+.breadcrumbs .sep { color: #556; }
+.breadcrumbs .cur { color: #fff; font-weight: 700; }
+#nav-header { gap: 12px; }
+
+/* Objective box */
+#objective-box { z-index: 4; max-height: calc(100% - 28px); overflow-y: auto; }
+.obj-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; cursor: pointer; }
+.obj-toggle { color: #667; font-size: 11px; }
+#objective-box.collapsed .obj-body { display: none; }
+.obj-name { color: #fff; font-weight: 800; font-size: 14px; margin-bottom: 4px; }
+.obj-goal { color: #aab; font-size: 12px; margin-bottom: 10px; line-height: 1.4; }
+.obj-item { font-size: 12px; line-height: 1.3; }
+.obj-item .tick { width: 16px; flex-shrink: 0; text-align: center; color: #556; text-decoration: none; display: inline-block; }
+.obj-item.done .tick { color: #00ff88; }
+.obj-data { font-family: monospace; font-size: 11px; color: #ffd27a; margin-top: 8px; word-break: break-word; line-height: 1.5; }
+.obj-meta { margin-top: 8px; font-size: 11px; color: #8890b0; border-top: 1px solid #ffffff14; padding-top: 6px; line-height: 1.5; }
+
+#speech-bubble { position: absolute; display: none; background: #fff; color: #111; padding: 6px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; pointer-events: none; transform: translate(-50%, -100%); white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,.4); z-index: 5; }
+#speech-bubble::after { content: ''; position: absolute; left: 50%; bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
+#game-panel.shake { animation: shake .4s; }
+@keyframes shake { 0%,100% { transform: none; } 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+
+/* Blocks */
+.blk { touch-action: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.blk-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.blk-icon { font-size: 13px; }
+.v-block.c-block { display: flex; flex-direction: column; align-items: stretch; padding: 8px 10px; min-width: 210px; }
+.c-block > .block-slot { margin: 6px 0 0 12px; background: rgba(0,0,0,.25); border-color: rgba(255,255,255,.2); min-height: 38px; }
+.c-label { font-size: 11px; opacity: .85; margin-top: 6px; }
+.block-slot > .blk { align-self: flex-start; }
+.block-slot:empty::before { content: attr(data-hint); color: #4a4f80; font-size: 11px; font-family: 'Segoe UI', system-ui, sans-serif; padding: 4px 6px; font-weight: 600; }
+.c-block > .block-slot:empty::before { color: rgba(255,255,255,.45); }
+.blk-in { background: rgba(0,0,0,.35); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 5px; padding: 3px 5px; font: 700 12px monospace; outline: none; min-width: 2.4em; -webkit-appearance: none; appearance: none; }
+select.blk-in { padding: 3px 6px; cursor: pointer; }
+select.blk-in option { background: #1a1d3a; color: #fff; }
+.blk-in:focus { border-color: #00ff88; }
+.cond-socket { display: inline-flex; align-items: center; min-width: 76px; min-height: 30px; border: 2px dashed rgba(255,255,255,.4); border-radius: 15px; padding: 2px; background: rgba(0,0,0,.25); }
+.cond-socket:empty::before { content: 'condition'; color: rgba(255,255,255,.5); font-size: 10px; padding: 0 8px; font-family: 'Segoe UI', system-ui, sans-serif; }
+.cond-socket.drag-over { border-color: #00ff88; background: rgba(0,255,136,.18); }
+.v-block.chip { border-radius: 16px; padding: 4px 10px; }
+.v-block.chip .v-block.chip { box-shadow: none; }
+.v-block.chip.cat-sensor.logic { background: linear-gradient(135deg, #0e7490, #155e75); }
+.v-block.dragging { position: fixed; z-index: 1000; pointer-events: none; opacity: .92; transform: rotate(2deg) scale(1.03); box-shadow: 0 14px 34px rgba(0,0,0,.6); margin: 0; }
+.drop-marker { height: 4px; border-radius: 2px; background: #00d4ff; box-shadow: 0 0 8px #00d4ff; align-self: stretch; flex-shrink: 0; }
+body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
+#workspace-area { touch-action: pan-y; }
+#workspace-area.locked { pointer-events: none; }
+#workspace-area.locked .blk-in { opacity: .8; }
+.ws-head { display: flex; justify-content: space-between; font-size: 11px; color: #667; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+.root-slot { min-height: calc(100% - 26px); border-style: solid; border-color: #1a1c38; margin-bottom: 0; }
+
+/* Palette */
+#category-tabs { scrollbar-width: none; }
+#category-tabs::-webkit-scrollbar { display: none; }
+.cat-tab { flex: 1 0 auto; text-align: center; padding: 10px 8px; }
+.cat-tab .cnt { font-size: 10px; background: #1e2242; color: #99a; border-radius: 8px; padding: 1px 6px; margin-left: 4px; }
+.cat-tab.active .cnt { background: #00d4ff33; color: #00d4ff; }
+.cat-tab.empty { opacity: .4; }
+#block-palette { position: relative; max-height: 36%; overflow-y: auto; align-content: flex-start; flex-shrink: 0; }
+#block-palette .c-block { min-width: 0; }
+#block-palette .block-slot { min-height: 14px; padding: 2px; }
+#block-palette .block-slot::before { content: none; }
+#block-palette .blk-in, #block-palette .cond-socket { pointer-events: none; }
+#block-palette .cond-socket { min-width: 50px; min-height: 22px; }
+#block-palette .blk:hover { transform: translateY(-1px); filter: brightness(1.12); }
+.palette-empty { color: #556; font-size: 12px; padding: 8px 2px; }
+#block-palette.trash-mode::after { content: '🗑  Drop here to delete'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,60,60,.12); border: 2px dashed #ff5555; color: #ff9090; font-weight: 800; font-size: 14px; border-radius: 6px; }
+#block-palette.trash-mode.hot::after { background: rgba(255,60,60,.32); color: #fff; }
+
+/* Controls */
+.btn-icon { background: #1e1e3f; color: #ccd; border: 1px solid #2a2e54; border-radius: 8px; padding: 9px 10px; cursor: pointer; font-size: 14px; line-height: 1; }
+.btn-icon:hover { border-color: #00d4ff; color: #fff; }
+.btn-action:disabled { opacity: .5; cursor: not-allowed; }
+.speed-ctl { display: flex; align-items: center; gap: 4px; font-size: 14px; }
+.speed-ctl input { width: 72px; accent-color: #00d4ff; }
+
+/* Victory overlay */
+#victory-overlay { position: fixed; inset: 0; background: rgba(3,4,12,.75); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px; }
+#victory-overlay.show { display: flex; }
+.victory-card { background: linear-gradient(160deg, #151936, #0d1024); border: 1px solid #00d4ff55; border-radius: 18px; padding: 26px 28px; width: min(440px, 100%); text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 40px #00d4ff22; animation: pop .35s ease-out; }
+@keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.v-title { font-size: 22px; font-weight: 800; color: #fff; }
+.v-sub { color: #99a; font-size: 13px; margin-top: 4px; }
+.v-stars { font-size: 46px; letter-spacing: 8px; margin: 14px 0 6px; }
+.v-star { display: inline-block; opacity: .18; filter: grayscale(1); transform: scale(.6); transition: all .35s cubic-bezier(.2,1.6,.4,1); }
+.v-star.on { opacity: 1; filter: none; transform: scale(1); }
+.v-score { color: #ffd700; font-weight: 800; font-size: 15px; margin-bottom: 12px; }
+.v-stats { text-align: left; background: #0a0c1a; border: 1px solid #1e2242; border-radius: 10px; padding: 10px 14px; font-size: 13px; line-height: 1.8; }
+.v-stats .ok { color: #00ff88; } .v-stats .no { color: #ff8080; }
+.v-unlock { margin-top: 10px; color: #00ff88; font-weight: 700; font-size: 13px; min-height: 1em; }
+.v-btns { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.v-btns button { flex: 1; min-width: 110px; }
+.btn-primary { background: linear-gradient(135deg, #00d4ff, #0088cc); color: #fff; border: none; padding: 11px; border-radius: 9px; font-weight: 800; cursor: pointer; font-size: 14px; }
+.btn-secondary { background: #1e1e3f; color: #ccd; border: 1px solid #2a2e54; padding: 11px; border-radius: 9px; font-weight: 700; cursor: pointer; font-size: 13px; }
+.btn-secondary:hover { border-color: #00d4ff; color: #fff; }
+
+#toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); background: #1a1d3a; border: 1px solid #ffd70066; color: #fff; padding: 12px 20px; border-radius: 12px; font-weight: 600; font-size: 14px; opacity: 0; pointer-events: none; transition: all .3s; z-index: 3000; max-width: calc(100vw - 32px); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ── Captain's Briefing (brief-) & About window (about-) ── */
+#briefing-overlay, #about-overlay { position: fixed; inset: 0; background: rgba(3,4,12,.78); display: none; align-items: center; justify-content: center; z-index: 2500; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px; }
+#briefing-overlay.show, #about-overlay.show { display: flex; }
+.brief-card, .about-card { background: linear-gradient(160deg, #151936, #0d1024); border: 1px solid #00d4ff55; border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 40px #00d4ff22; animation: pop .35s ease-out; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); }
+.brief-card { width: min(640px, 100%); display: flex; flex-direction: column; padding: 22px 24px 16px; min-height: 0; }
+.brief-main { display: flex; gap: 18px; align-items: flex-start; flex: 1; min-height: 0; }
+.brief-captain { width: 150px; flex-shrink: 0; }
+.brief-captain svg, .about-captain svg { display: block; width: 100%; height: auto; overflow: visible; }
+.cap-svg { animation: brief-bob 3s ease-in-out infinite; }
+@keyframes brief-bob { 0%, 100% { transform: translateY(-4px); } 50% { transform: translateY(4px); } }
+.cap-eye { transform-box: fill-box; transform-origin: center; animation: brief-blink 4.6s infinite; }
+@keyframes brief-blink { 0%, 91%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.1); } }
+.cap-mouth { transform-box: fill-box; transform-origin: center top; }
+.brief-talking .cap-mouth { animation: brief-talk .2s ease-in-out infinite alternate; }
+@keyframes brief-talk { from { transform: scaleY(.45); } to { transform: scaleY(1.35); } }
+.brief-bubble { position: relative; flex: 1; min-width: 0; align-self: stretch; display: flex; flex-direction: column; min-height: 0; background: #0a0c1a; border: 1px solid #1e2242; border-radius: 14px; padding: 14px 16px; }
+.brief-bubble::before { content: ''; position: absolute; left: -10px; top: 46px; border: 10px solid transparent; border-left: 0; border-right-color: #1e2242; }
+.brief-bubble::after { content: ''; position: absolute; left: -8px; top: 47px; border: 9px solid transparent; border-left: 0; border-right-color: #0a0c1a; }
+.brief-head { font-size: 11px; color: #8890b0; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.brief-title { color: #00d4ff; font-weight: 800; font-size: 17px; margin-bottom: 8px; line-height: 1.3; }
+.brief-text { font-size: 15px; line-height: 1.5; color: #e0e0ff; min-height: 6em; overflow-y: auto; flex: 1 1 auto; }
+.brief-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.brief-chip { background: #00d4ff18; border: 1px solid #00d4ff55; color: #cfefff; border-radius: 16px; padding: 6px 12px; font-size: 13px; font-weight: 700; }
+.brief-foot { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-shrink: 0; }
+.brief-dots { display: flex; gap: 7px; flex: 1; justify-content: center; }
+.brief-dot { width: 9px; height: 9px; border-radius: 50%; background: #2a2e54; transition: all .25s; }
+.brief-dot.on { background: #00d4ff; box-shadow: 0 0 8px #00d4ff; transform: scale(1.3); }
+.brief-dot.past { background: #00d4ff77; }
+.brief-skip { background: none; border: none; color: #8890b0; font-weight: 700; font-size: 14px; cursor: pointer; min-height: 44px; padding: 0 10px; }
+.brief-skip:hover { color: #fff; }
+.brief-foot .btn-primary, .brief-foot .btn-secondary { min-height: 44px; min-width: 112px; }
+.about-card { position: relative; width: min(560px, 100%); display: flex; flex-direction: column; overflow: hidden; }
+.about-scroll { overflow-y: auto; padding: 22px 24px 20px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #2a2e54 transparent; }
+.about-close { position: absolute; top: 10px; right: 10px; width: 44px; height: 44px; border-radius: 50%; background: #1e1e3f; border: 1px solid #2a2e54; color: #ccd; font-size: 18px; cursor: pointer; z-index: 1; }
+.about-close:hover { border-color: #00d4ff; color: #fff; }
+.about-header { display: flex; gap: 14px; align-items: center; padding-right: 44px; }
+.about-captain { width: 72px; flex-shrink: 0; }
+.about-name { font-size: 26px; }
+.about-tagline { color: #aab4d8; font-size: 14px; margin-top: 2px; }
+.about-version { color: #8890b0; font-size: 12px; margin-top: 4px; }
+.about-h { color: #00d4ff; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; margin: 20px 0 8px; }
+.about-p { font-size: 14px; line-height: 1.55; color: #cfd3f5; }
+.about-pillars { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.about-pillar { background: #0a0c1a; border: 1px solid #1e2242; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #aab4d8; line-height: 1.4; }
+.about-pillar b { display: block; color: #fff; margin-bottom: 2px; }
+.about-islands { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.about-isl { display: flex; align-items: center; gap: 10px; background: #0a0c1a; border: 1px solid #1e2242; border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+.about-isl .ai-icon { width: 24px; text-align: center; flex-shrink: 0; }
+.about-isl .ai-name { flex: 1; min-width: 0; color: #fff; font-weight: 700; }
+.about-isl .ai-name span { display: block; color: #8890b0; font-size: 12px; font-weight: 500; }
+.about-isl .ai-stars { color: #ffd700; font-weight: 800; white-space: nowrap; }
+.about-isl.locked { opacity: .6; }
+.about-total { text-align: right; color: #ffd700; font-weight: 800; margin-top: 8px; font-size: 14px; }
+#btnReplayBriefing { width: 100%; margin-top: 20px; min-height: 44px; }
+.about-foot { margin-top: 14px; font-size: 12px; color: #8890b0; line-height: 1.5; text-align: center; }
+@media (max-width: 600px) {
+  .brief-card { padding: 16px 14px 12px; }
+  .brief-main { flex-direction: column; align-items: center; gap: 10px; }
+  .brief-captain { width: 96px; }
+  .brief-bubble { width: 100%; }
+  .brief-bubble::before { left: 50%; top: -10px; margin-left: -10px; border: 10px solid transparent; border-top: 0; border-bottom-color: #1e2242; }
+  .brief-bubble::after { left: 50%; top: -8px; margin-left: -9px; border: 9px solid transparent; border-top: 0; border-bottom-color: #0a0c1a; }
+  .brief-text { min-height: 4.5em; }
+  .brief-foot { flex-wrap: wrap; gap: 8px; }
+  .brief-dots { order: -1; flex-basis: 100%; }
+  .brief-foot .btn-primary, .brief-foot .btn-secondary { flex: 1; min-width: 0; }
+  .about-scroll { padding: 18px 16px; }
+  .about-pillars { grid-template-columns: 1fr; }
+  .about-name { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .cap-svg, .cap-eye, .brief-talking .cap-mouth { animation: none; } }
+
+/* Narrow screens (phones / iPad split view) */
+@media (max-width: 760px) {
+  #workbench-body { flex-direction: column; }
+  #game-panel { flex: none; height: 42%; }
+  #block-panel { flex: 1; min-width: 0; border-left: none; border-top: 2px solid #1e2242; }
+  .app-topbar { padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+  .topbar-sub { display: none; }
+  #objective-box { max-width: 210px; padding: 8px 10px; font-size: 11px; top: 8px; left: 8px; }
+  #console-output { height: 64px; }
+  #workbench-controls { padding: 8px; gap: 6px; }
+  .speed-ctl input { width: 56px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ VIEW 1: WORLD MAP ============ -->
+<div id="screen-world-map" class="view-screen active">
+  <div class="app-topbar" id="topbar">
+    <div class="topbar-group">
+      <div class="app-logo">⛵ Code Odyssey</div>
+      <span class="topbar-sub">Your journey from first step to algorithm · 12 Islands · 36 Sub-stages</span>
+    </div>
+    <div class="topbar-group">
+      <span class="star-pill" id="wm-stars">⭐ 0/108</span>
+      <button class="btn-nav" id="btnAboutWorld" data-about>ℹ️ About</button>
+      <button class="btn-nav danger" id="btnResetProgress" title="Erase all saved progress">↺ Reset Progress</button>
+    </div>
+  </div>
+  <canvas id="world-map-canvas" aria-label="World map with 12 islands"></canvas>
+</div>
+
+<!-- ============ VIEW 2: ISLAND SUB-STAGE MAP ============ -->
+<div id="screen-island" class="view-screen">
+  <div class="app-topbar" id="island-bar">
+    <button class="btn-nav" id="btnIslandBack">⬅ World Map</button>
+    <div id="island-title">Island 1: Commands</div>
+    <div class="topbar-group">
+      <button class="btn-nav" id="btnAboutIsland" data-about>ℹ️ About</button>
+      <span class="star-pill" id="island-stars">Stars: ⭐ 0/9</span>
+    </div>
+  </div>
+  <canvas id="island-canvas" aria-label="Island sub-stage map"></canvas>
+</div>
+
+<!-- ============ VIEW 3: PUZZLE WORKBENCH ============ -->
+<div id="screen-workbench" class="view-screen">
+  <div class="app-topbar" id="nav-header">
+    <div class="topbar-group">
+      <button class="btn-nav" id="btnBackWorld">⬅ World Map</button>
+      <button class="btn-nav" id="btnBackIslands">⬅ Islands</button>
+      <nav class="breadcrumbs" id="breadcrumbs"></nav>
+    </div>
+    <div class="topbar-group">
+      <button class="btn-nav" id="btnAboutWorkbench" data-about>ℹ️ About</button>
+      <span class="star-pill" id="wb-score">⭐ Score: 0/108</span>
+    </div>
+  </div>
+  <div id="workbench-body">
+    <div id="game-panel">
+      <canvas id="gameCanvas" aria-label="Puzzle grid"></canvas>
+      <div id="objective-box">
+        <div class="obj-head" id="obj-head"><div class="obj-title" id="obj-title">Objectives</div><span class="obj-toggle" id="obj-toggle">▾ hide</span></div>
+        <div class="obj-body">
+          <div class="obj-name" id="obj-name"></div>
+          <div class="obj-goal" id="obj-goal"></div>
+          <div id="obj-list"></div>
+          <div class="obj-data" id="obj-data"></div>
+          <div class="obj-meta" id="obj-meta"></div>
+        </div>
+      </div>
+      <div id="speech-bubble"></div>
+    </div>
+    <div id="block-panel">
+      <div id="category-tabs"></div>
+      <div id="block-palette"></div>
+      <div id="workspace-area">
+        <div class="ws-head"><span>🧩 Program</span><span id="block-count">0 blocks</span></div>
+        <div id="program-root" class="block-slot root-slot" data-slot="root" data-hint="Drag blocks here (or tap a palette block to add it)"></div>
+      </div>
+      <div id="workbench-controls">
+        <button class="btn-action" id="btnRun">▶ Run Code</button>
+        <button class="btn-action" id="btnReset">↺ Reset</button>
+        <label class="speed-ctl" title="Execution speed">🐢<input type="range" id="speedSlider" min="1" max="5" step="1" value="3">🐇</label>
+        <button class="btn-icon" id="btnHint" title="Hint">💡</button>
+        <button class="btn-icon" id="btnClear" title="Clear workspace">🗑</button>
+      </div>
+      <div id="console-output"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VICTORY OVERLAY ============ -->
+<div id="victory-overlay" role="dialog" aria-modal="true">
+  <div class="victory-card">
+    <div class="v-title" id="v-title">Sub-stage Clear!</div>
+    <div class="v-sub" id="v-sub"></div>
+    <div class="v-stars"><span class="v-star">⭐</span><span class="v-star">⭐</span><span class="v-star">⭐</span></div>
+    <div class="v-score" id="v-score"></div>
+    <div class="v-stats" id="v-stats"></div>
+    <div class="v-unlock" id="v-unlock"></div>
+    <div class="v-btns">
+      <button class="btn-secondary" id="btnReplay">↻ Replay</button>
+      <button class="btn-secondary" id="btnVictoryIsland">🗺 Island Map</button>
+      <button class="btn-primary" id="btnNextSub">Next Sub-stage ▶</button>
+    </div>
+  </div>
+</div>
+<!-- ============ CAPTAIN'S BRIEFING ============ -->
+<div id="briefing-overlay" role="dialog" aria-modal="true" aria-labelledby="brief-title">
+  <div class="brief-card">
+    <div class="brief-main">
+      <div class="brief-captain" id="brief-captain" aria-hidden="true"></div>
+      <div class="brief-bubble">
+        <div class="brief-head" id="brief-head">Captain Algo · Page 1 of 8</div>
+        <div class="brief-title" id="brief-title"></div>
+        <div class="brief-text" id="brief-text" aria-live="polite"></div>
+        <div class="brief-chips" id="brief-chips"></div>
+      </div>
+    </div>
+    <div class="brief-foot">
+      <button class="brief-skip" id="briefSkip">Skip</button>
+      <div class="brief-dots" id="brief-dots"></div>
+      <button class="btn-secondary" id="briefBack">◀ Back</button>
+      <button class="btn-primary" id="briefNext">Next ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ABOUT WINDOW ============ -->
+<div id="about-overlay" role="dialog" aria-modal="true" aria-label="About Code Odyssey">
+  <div class="about-card">
+    <button class="about-close" id="btnAboutClose" aria-label="Close">✕</button>
+    <div class="about-scroll" id="about-scroll"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ==========================================
+// 1. CONSTANTS & GAME STATE
+// ==========================================
+// @@ENGINE-BEGIN  (pure game logic: no DOM access in this section)
+const TILE = 48, COLS = 16, ROWS = 12;
+const T = { GRASS: 0, WATER: 1, STONE: 2, TREE: 3, HOUSE: 4, PATH: 5, FLOWER: 6, BRIDGE: 7, DOOR: 8, TRAP: 9 };
+const TILE_CHARS = { '.': 0, '~': 1, '#': 2, 'T': 3, 'H': 4, '=': 5, '*': 6, 'b': 7, 'D': 8, '^': 9 };
+const WALLS = new Set([T.STONE, T.TREE, T.HOUSE]);
+const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // East, South, West, North
+const DIR_NAMES = ['East', 'South', 'West', 'North'];
+const MAX_STARS = 108;
+const KIND_NAMES = ['Intro', 'Pattern', 'Mastery'];
+
+const WORLD_ISLANDS = [
+  { id: 1,  name: "Commands",    x: 120, y: 480, icon: "⚔️", concept: "Sequential Decomposition", desc: "Break a journey into an exact sequence of commands." },
+  { id: 2,  name: "Functions",   x: 240, y: 360, icon: "📦", concept: "Abstraction & Code Reuse", desc: "Name a group of commands once, then call it again and again." },
+  { id: 3,  name: "For Loops",   x: 360, y: 460, icon: "🔁", concept: "Fixed Iteration & Patterns", desc: "Spot a repeating pattern and loop it N times." },
+  { id: 4,  name: "Conditionals",x: 480, y: 320, icon: "🔀", concept: "Decision Making with If / Else", desc: "Let your agent sense the world and choose what to do." },
+  { id: 5,  name: "Logicals",    x: 580, y: 450, icon: "⚡", concept: "Compound Conditions: AND, OR, NOT", desc: "Combine sensor checks into smarter decisions." },
+  { id: 6,  name: "While Loops", x: 700, y: 340, icon: "♾️", concept: "Conditional Iteration", desc: "Keep going until a condition changes - no counting needed." },
+  { id: 7,  name: "Algorithms",  x: 840, y: 420, icon: "🧩", concept: "Universal Problem-Solving", desc: "Write one strategy that solves many different maps." },
+  { id: 8,  name: "Variables",   x: 820, y: 220, icon: "💎", concept: "State Tracking & Data Storage", desc: "Store numbers, update them, and make decisions with them." },
+  { id: 9,  name: "Types",       x: 680, y: 150, icon: "🎨", concept: "Types & Object Properties", desc: "Change an agent's properties to unlock new abilities." },
+  { id: 10, name: "Parameters",  x: 520, y: 180, icon: "🎛️", concept: "Function Customization", desc: "Give functions inputs so one function fits many situations." },
+  { id: 11, name: "World Build", x: 340, y: 160, icon: "🏗️", concept: "Dynamic Map Editing", desc: "Use coordinates to build bridges and portals in the world." },
+  { id: 12, name: "Arrays",      x: 160, y: 200, icon: "📊", concept: "Indexed Data & Collections", desc: "Loop over lists of coordinates, filter them and sort them." }
+];
+
+const SENSORS = {
+  isPathClear: 'The tile ahead can be walked onto (no wall, guard or locked door)',
+  isBlocked: 'The tile ahead is a wall, guard or locked door',
+  isLeftClear: 'The tile to the left is walkable',
+  isRightClear: 'The tile to the right is walkable',
+  isOnGem: 'Standing on a gem',
+  isOnKey: 'Standing on a key',
+  isOnSwitch: 'Standing on a switch that is still off',
+  isWaterAhead: 'Water is directly ahead',
+  isTrapAhead: 'A spike trap is directly ahead',
+  isGuardAhead: 'A guard is directly ahead',
+  isAtExit: 'Standing on the exit flag',
+  hasKey: 'Carrying at least one key',
+  allGemsCollected: 'Every (non-silver) gem has been collected'
+};
+
+const USES_LABELS = {
+  REPEAT: 'Use a Repeat loop 🔁', WHILE: 'Use a While loop ♾️', IF: 'Use an If block 🔀',
+  FUNC: 'Define and call a function 📦', PARAM: 'Call a function with parameters 🎛️',
+  AND: 'Use the AND operator', OR: 'Use the OR operator', NOT: 'Use the NOT operator',
+  PROP: 'Set an agent property 🎨', AGENT: 'Control each agent 🤖', WORLD: 'Use a World block 🏗️',
+  FOREACH: 'Use a For Each loop 📊', SORT: 'Sort the list ↕️'
+};
+
+// ---------- Map helpers ----------
+const BASE_ISLE = [
+  '~~~~~~~~~~~~~~~~',
+  '~~~..T.....T.~~~',
+  '~~.*.........*~~',
+  '~~............~~',
+  '~~............~~',
+  '~~............~~',
+  '~~............~~',
+  '~~............~~',
+  '~~............~~',
+  '~~.T......*...~~',
+  '~~~~.....T..~~~~',
+  '~~~~~~~~~~~~~~~~'
+];
+function isle(over) { const m = BASE_ISLE.slice(); for (const k in over) m[+k] = over[k]; return m; }
+
+// ==========================================
+// CURRICULUM: 12 ISLANDS x 3 SUB-STAGES
+// Map legend: . grass  ~ water  # stone  T tree  H house  = path  * flower  b bridge  D door  ^ spike trap
+// Entities (on path): A agent  a agent 2  g gem  $ gold gem  % silver gem  k key  G guard (SWORD)  Q armored guard (HAMMER)
+//                     E exit flag  s switch  B/R/V blue/red/green barrier  w waypoint beacon  ? random slot
+// ==========================================
+const SUBSTAGE_DATA = {
+  // ---------------- Island 1: Commands ----------------
+  '1.1': { title: 'First Step', goal: 'Introduce basic movement commands.',
+    text: 'Move the agent forward 3 steps to collect the gem. Tip: change the number inside Move Forward.',
+    map: isle({ 3: '~~..TT....T...~~', 5: '~~A==g..T.....~~', 7: '~~.T.....*....~~' }), dir: 0, autoCollect: true,
+    palette: ['move'], objectives: ['gems'], solution: 'move(3)',
+    hint: 'One Move Forward block with the number 3 is all you need.' },
+  '1.2': { title: 'Right Turn', goal: 'Combine movement and direction changes.',
+    text: 'Move forward 2 steps, turn right, move 2 steps, then collect the gem.',
+    map: isle({ 3: '~~.A==T....*..~~', 4: '~~...=....T...~~', 5: '~~.T.g..*.....~~' }), dir: 0,
+    palette: ['move', 'turnRight', 'collectGem'], objectives: ['gems'], solution: 'move(2) right move(2) gem',
+    hint: 'Move Forward (2) → Turn Right → Move Forward (2) → Collect Gem.' },
+  '1.3': { title: 'Castle Maze', goal: 'Decompose a complex path into sequential commands.',
+    text: 'Defeat the guard, grab the key, unlock the door and reach the exit flag.',
+    map: [
+      '~~~~~~~~~~~~~~~~',
+      '~~##########..~~',
+      '~##........#..~~',
+      '~~A=G=k..T.#.*~~',
+      '~##...=..T.#..~~',
+      '~~#...=..TT#..~~',
+      '~~#...=DE..#..~~',
+      '~~#........#..~~',
+      '~~##########..~~',
+      '~~~..*....T..~~~',
+      '~~~~~........~~~',
+      '~~~~~~~~~~~~~~~~'], dir: 0,
+    palette: ['move', 'turnRight', 'turnLeft', 'attack', 'collectKey'], objectives: ['guards', 'keys', 'exit'],
+    solution: 'move(1) attack move(3) key right move(3) left move(2)',
+    hint: 'Attack only works when the guard is right in front of you. The key opens the door automatically.' },
+
+  // ---------------- Island 2: Functions ----------------
+  '2.1': { title: 'Double Step', goal: 'Define a custom function block stepAndCollect().',
+    text: 'Collect both gems. Put Move Forward (2) + Collect Gem inside a Define block, then call it twice.',
+    map: isle({ 3: '~~..T.....*...~~', 5: '~~.A=g=g..T...~~', 7: '~~......TT....~~' }), dir: 0,
+    palette: ['move', 'collectGem', 'defFunc|name=stepAndCollect', 'callFunc|name=stepAndCollect'],
+    objectives: ['gems', { uses: 'FUNC' }],
+    solution: 'def stepAndCollect() { move(2) gem } call stepAndCollect() call stepAndCollect()',
+    hint: 'Define stepAndCollect { Move Forward (2), Collect Gem } then Call stepAndCollect twice.' },
+  '2.2': { title: 'Corner Cleaner', goal: 'Use functions to solve repetitive turn patterns.',
+    text: 'Clear the 3 corner gems with a cleanCorner() function.',
+    map: isle({ 5: '~~..g==g..T...~~', 6: '~~..=~~=......~~', 7: '~~.T=~~=..*...~~', 8: '~~..A..g......~~' }), dir: 3,
+    palette: ['move', 'turnRight', 'turnLeft', 'collectGem', 'defFunc|name=cleanCorner', 'callFunc|name=cleanCorner'],
+    objectives: ['gems', { uses: 'FUNC' }],
+    solution: 'def cleanCorner() { move(3) gem right } call cleanCorner() call cleanCorner() call cleanCorner()',
+    hint: 'Each corner is 3 steps away and needs a right turn afterwards.' },
+  '2.3': { title: 'Twin Towers', goal: 'Abstract complex sub-tasks into 2 distinct functions: climbTower() and collectPeak().',
+    text: 'Climb both towers, collect each peak gem, then reach the flag.',
+    map: isle({ 5: '~~.###..###...~~', 6: '~~.#g#..#g#...~~', 7: '~~.#=#..#=#...~~', 8: '~~.#=#..#=#...~~', 9: '~~A=========E.~~' }), dir: 0,
+    palette: ['move', 'turnRight', 'turnLeft', 'collectGem', 'defFunc|name=climbTower', 'callFunc|name=climbTower', 'defFunc|name=collectPeak', 'callFunc|name=collectPeak'],
+    objectives: ['gems', 'exit', { uses: 'FUNC' }],
+    solution: 'def climbTower() { left move(3) } def collectPeak() { gem right right move(3) left } move(2) call climbTower() call collectPeak() move(5) call climbTower() call collectPeak() move(3)',
+    hint: 'climbTower = Turn Left + Move (3). collectPeak = gem, turn around, come down, face East again.' },
+
+  // ---------------- Island 3: For Loops ----------------
+  '3.1': { title: 'Four Steps', goal: 'Repeat movement using Repeat N Times.',
+    text: 'Walk 4 steps to the flag using a single Repeat loop.',
+    map: isle({ 6: '~~.A===E..T...~~', 4: '~~....*.......~~' }), dir: 0,
+    palette: ['move', 'repeat'], objectives: ['exit', { uses: 'REPEAT' }], solution: 'repeat(4) { move(1) }',
+    hint: 'Repeat 4 times [ Move Forward (1) ].' },
+  '3.2': { title: 'Square Garden', goal: 'Repeat a sequence of Move + Turn 4 times.',
+    text: 'Walk around the 3x3 garden perimeter and collect all 4 corner gems.',
+    map: isle({ 4: '~~..A==g..T...~~', 5: '~~..=**=......~~', 6: '~~..=**=..*...~~', 7: '~~..g==g......~~' }), dir: 0,
+    extra: [{ ch: 'g', x: 4, y: 4 }], autoCollect: true,
+    palette: ['move', 'turnRight', 'turnLeft', 'repeat'], objectives: ['gems', { uses: 'REPEAT' }],
+    solution: 'repeat(4) { move(3) right }', hint: 'Repeat 4 times [ Move Forward (3), Turn Right ].' },
+  '3.3': { title: 'Staircase Climb', goal: 'Nest a function call inside a Repeat loop.',
+    text: 'Climb the 5-step zigzag staircase and collect the gem at the top.',
+    map: isle({ 4: '~~......g.....~~', 5: '~~.....==#....~~', 6: '~~....==##....~~', 7: '~~...==###....~~', 8: '~~..==####....~~', 9: '~~.A=#####....~~' }), dir: 0,
+    palette: ['move', 'turnRight', 'turnLeft', 'collectGem', 'repeat', 'defFunc|name=stepUp', 'callFunc|name=stepUp'],
+    objectives: ['gems', { uses: 'REPEAT' }, { uses: 'FUNC' }],
+    solution: 'def stepUp() { move(1) left move(1) right } repeat(5) { call stepUp() } gem',
+    hint: 'stepUp = Move, Turn Left, Move, Turn Right. Repeat it 5 times.' },
+
+  // ---------------- Island 4: Conditionals ----------------
+  '4.1': { title: 'Open Door', goal: 'Check the sensor isPathClear.',
+    text: 'Follow the winding path to the flag (17 actions). Each turn: if the path is clear, move; else turn right.',
+    map: [
+      'TTTTTTTTTTTTTTTT',
+      'TTT.*TTTTTTT~~TT',
+      'TTA=======TTTT~T',
+      'TTTTTTTTT=TTTT~T',
+      'TTT..TTTT=TTTTTT',
+      'TTT..TTTT=TT..TT',
+      'TTTTTE====TT.*TT',
+      'TTTTTTTTTTTTTTTT',
+      'TT~~TTTT..TTTTTT',
+      'TT~~TTTT.*TTTTTT',
+      'TTTTTTTTTTTTTTTT',
+      'TTTTTTTTTTTTTTTT'], dir: 0,
+    palette: ['move', 'turnRight', 'turnLeft', 'repeat', 'if', 'ifElse', 'sensor|name=isPathClear'],
+    objectives: ['exit', { uses: 'IF' }],
+    solution: 'repeat(17) { if isPathClear { move(1) } else { right } }',
+    hint: 'Repeat 17 [ If isPathClear → Move Forward (1) Else → Turn Right ]. Drag the isPathClear chip into the If socket.' },
+  '4.2': { title: 'Gem vs Switch', goal: 'React dynamically to the tile type.',
+    text: 'Each of the 4 tiles hides a gem or a switch - it changes every run! Collect gems, activate switches.',
+    map: isle({ 5: '~~.A????..T...~~', 3: '~~.....*......~~' }), dir: 0, randomFill: { mode: 'each', options: ['g', 's'] },
+    palette: ['move', 'collectGem', 'toggleSwitch', 'repeat', 'if', 'ifElse', 'sensor|name=isOnGem', 'sensor|name=isOnSwitch'],
+    objectives: ['gems', 'switches', { uses: 'IF' }],
+    solution: 'repeat(4) { move(1) if isOnGem { gem } else { switch } }',
+    hint: 'Repeat 4 [ Move, If isOnGem → Collect Gem Else → Activate Switch ].' },
+  '4.3': { title: 'Random Corridor', goal: 'Handle three cases with If / Else If / Else.',
+    text: 'Every tile holds a gem, a switch or a key - randomly! Nest an If inside the Else to handle all three.',
+    map: isle({ 5: '~~A???????..T.~~', 7: '~~...T....*...~~' }), dir: 0, randomFill: { mode: 'each', options: ['g', 's', 'k'] },
+    palette: ['move', 'collectGem', 'collectKey', 'toggleSwitch', 'repeat', 'if', 'ifElse', 'sensor|name=isOnGem', 'sensor|name=isOnSwitch', 'sensor|name=isOnKey'],
+    objectives: ['gems', 'switches', 'keys', { uses: 'IF' }],
+    solution: 'repeat(7) { move(1) if isOnGem { gem } else { if isOnSwitch { switch } else { key } } }',
+    hint: 'If isOnGem → gem, Else → ( If isOnSwitch → switch, Else → key ).' },
+
+  // ---------------- Island 5: Logical Operators ----------------
+  '5.1': { title: 'Safe Path', goal: 'Combine conditions with AND and NOT.',
+    text: 'Walk while the path is clear AND there is NOT a trap ahead. Stop safely on the flag before the spikes.',
+    map: isle({ 5: '~~A======E^===T~', 3: '~~..T....*....~~' }), dir: 0,
+    palette: ['move', 'while', 'if', 'sensor|name=isPathClear', 'sensor|name=isTrapAhead', 'and', 'or', 'not'],
+    objectives: ['exit', { uses: 'AND' }, { uses: 'NOT' }],
+    solution: 'while isPathClear and not isTrapAhead { move(1) }',
+    hint: 'While ( isPathClear AND NOT isTrapAhead ) [ Move Forward (1) ].' },
+  '5.2': { title: 'Double Sensor', goal: 'Evaluate If (isOnGem OR isOnKey) → Collect Item.',
+    text: 'Walk the 8 tiles. Gems and keys appear randomly - collect every item with a single If.',
+    map: isle({ 4: '~~A????????.T.~~', 6: '~~....*...T...~~' }), dir: 0, randomFill: { mode: 'each', options: ['g', 'k', '='] },
+    palette: ['move', 'collectItem', 'repeat', 'if', 'sensor|name=isOnGem', 'sensor|name=isOnKey', 'and', 'or', 'not'],
+    objectives: ['gems', 'keys', { uses: 'OR' }],
+    solution: 'repeat(8) { move(1) if isOnGem or isOnKey { item } }',
+    hint: 'Repeat 8 [ Move, If ( isOnGem OR isOnKey ) → Collect Item ].' },
+  '5.3': { title: 'Trap Avoidance', goal: 'Navigate a minefield using NOT isWater AND NOT isTrap.',
+    text: 'Head East. If the way is safe, step forward - otherwise sidestep left (North) and keep going until the flag.',
+    map: [
+      '~~~~~~~~~~~~~~~~',
+      '~~~..T.....T.~~~',
+      '~~.*.........*~~',
+      '~~...T....T...~~',
+      'TTTTTTTTTTTTTTTT',
+      'T....^...~...^.T',
+      'T.^......====E.T',
+      'T.....====~..^.T',
+      'T..====^...~...T',
+      'TA==~^...^.....T',
+      'TTTTTTTTTTTTTTTT',
+      '~~~~~~~~~~~~~~~~'], dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'while', 'if', 'ifElse', 'sensor|name=isWaterAhead', 'sensor|name=isTrapAhead', 'sensor|name=isAtExit', 'and', 'or', 'not'],
+    objectives: ['exit', { uses: 'AND' }],
+    solution: 'while not isAtExit { if not isWaterAhead and not isTrapAhead { move(1) } else { left move(1) right } }',
+    hint: 'While NOT isAtExit [ If (NOT isWaterAhead AND NOT isTrapAhead) → Move, Else → Turn Left, Move, Turn Right ].' },
+
+  // ---------------- Island 6: While Loops ----------------
+  '6.1': { title: 'Walk to Wall', goal: 'Repeat until a condition becomes false.',
+    text: 'Walk until the wall. No counting allowed - use While isPathClear.',
+    map: isle({ 6: '~~A========E#.~~', 4: '~~...T....*...~~' }), dir: 0,
+    palette: ['move', 'turnRight', 'while', 'repeat', 'sensor|name=isPathClear', 'not'],
+    objectives: ['exit', { uses: 'WHILE' }], solution: 'while isPathClear { move(1) }',
+    hint: 'While isPathClear [ Move Forward (1) ].' },
+  '6.2': { title: 'Gem Search', goal: 'Search a corridor of unknown length.',
+    text: 'The gem hides somewhere new every run. Walk while NOT isOnGem, then collect it.',
+    map: isle({ 5: '~~A??????????#~~', 7: '~~...*....T...~~' }), dir: 0, randomFill: { mode: 'one', item: 'g' },
+    palette: ['move', 'collectGem', 'while', 'sensor|name=isOnGem', 'sensor|name=isPathClear', 'not'],
+    objectives: ['gems', { uses: 'WHILE' }], solution: 'while not isOnGem { move(1) } gem',
+    hint: 'While NOT isOnGem [ Move Forward (1) ] then Collect Gem.' },
+  '6.3': { title: 'Maze Runner', goal: 'Combine a While loop with nested If conditionals.',
+    text: 'Follow the twisting corridor to the flag: move if clear, otherwise turn toward the open side.',
+    map: [
+      'TTTTTTTTTTTTTTTT',
+      'TA=====TTTTTTTTT',
+      'TTTTTT=TTTTTTTTT',
+      'TTTTTT=TTTTTTTTT',
+      'TTTTTT=====TTTTT',
+      'TTTTTTTTTT=TTTTT',
+      'TTTTTTTTTT=TTTTT',
+      'TTTTTTTTTT=TTTTT',
+      'TTTT=======TTTTT',
+      'TTTT=TTTTTTTTTTT',
+      'TTTT=========ETT',
+      'TTTTTTTTTTTTTTTT'], dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'while', 'if', 'ifElse', 'sensor|name=isPathClear', 'sensor|name=isRightClear', 'sensor|name=isLeftClear', 'sensor|name=isAtExit', 'not', 'and'],
+    objectives: ['exit', { uses: 'WHILE' }],
+    solution: 'while not isAtExit { if isPathClear { move(1) } else { if isRightClear { right } else { left } } }',
+    hint: 'While NOT isAtExit [ If isPathClear → Move, Else → ( If isRightClear → Turn Right, Else → Turn Left ) ].' },
+
+  // ---------------- Island 7: Algorithms ----------------
+  '7.1': { title: 'Wall Follower', goal: 'Implement the Left-Hand Wall Follower algorithm.',
+    text: 'Keep your left hand on the wall: if left is open, turn left and step; else if ahead is clear, step; else turn right.',
+    mazeSeeds: [7], dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'while', 'if', 'ifElse', 'sensor|name=isLeftClear', 'sensor|name=isPathClear', 'sensor|name=isRightClear', 'sensor|name=isAtExit', 'not'],
+    objectives: ['exit', { uses: 'WHILE' }],
+    solution: 'while not isAtExit { if isLeftClear { left move(1) } else { if isPathClear { move(1) } else { right } } }',
+    hint: 'While NOT isAtExit [ If isLeftClear → Turn Left, Move. Else → ( If isPathClear → Move, Else → Turn Right ) ].' },
+  '7.2': { title: 'Spiral Collector', goal: 'Algorithmic spiral traversal to collect all inner gems.',
+    text: 'Spiral inward collecting every gem. Keep walking; when blocked, turn right. Stop when all gems are collected.',
+    map: [
+      'TTTTTTTTTTTTTTTT',
+      'TA=====g======TT',
+      'TTTTTTTTTTTTT=TT',
+      'T=======g===T=TT',
+      'T=TTTTTTTTT=T=TT',
+      'T=T======gT=T=TT',
+      'TgTgTTTTTTTgTgTT',
+      'T=T=TTTTTTT=T=TT',
+      'T=T===g=====T=TT',
+      'T=TTTTTTTTTTT=TT',
+      'T====g========TT',
+      'TTTTTTTTTTTTTTTT'], dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'collectGem', 'while', 'if', 'ifElse', 'sensor|name=isOnGem', 'sensor|name=isPathClear', 'sensor|name=allGemsCollected', 'not'],
+    objectives: ['gems', { uses: 'WHILE' }],
+    solution: 'while not allGemsCollected { if isOnGem { gem } if isPathClear { move(1) } else { right } }',
+    hint: 'While NOT allGemsCollected [ If isOnGem → gem. If isPathClear → Move, Else → Turn Right ].' },
+  '7.3': { title: 'The Grand Escape', goal: 'One universal algorithm that solves 3 randomized maze variants.',
+    text: 'Your program runs on 3 different mazes in a row. Only a true algorithm escapes all three!',
+    mazeSeeds: [101, 202, 303], dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'while', 'if', 'ifElse', 'sensor|name=isLeftClear', 'sensor|name=isPathClear', 'sensor|name=isRightClear', 'sensor|name=isAtExit', 'not'],
+    objectives: ['exit', { uses: 'WHILE' }],
+    solution: 'while not isAtExit { if isLeftClear { left move(1) } else { if isPathClear { move(1) } else { right } } }',
+    hint: 'Reuse your wall-follower from 7.1 - a good algorithm works on any maze.' },
+
+  // ---------------- Island 8: Variables ----------------
+  '8.1': { title: 'Gem Counter', goal: 'Declare gemCount = 0 and increase it on every pickup.',
+    text: 'Collect the 3 gems and count them: gemCount must equal 3 at the end.',
+    map: isle({ 5: '~~A=g=g=g...T.~~', 3: '~~...*....T...~~' }), dir: 0,
+    palette: ['move', 'collectGem', 'repeat', 'setVar|name=gemCount|value=0', 'changeVar|name=gemCount|value=1'],
+    objectives: ['gems', { var: 'gemCount', op: '==', value: 3 }],
+    solution: 'set gemCount = 0 repeat(3) { move(2) gem change gemCount by 1 }',
+    hint: 'Set gemCount = 0, then Repeat 3 [ Move (2), Collect Gem, Change gemCount by 1 ].' },
+  '8.2': { title: 'Step Tracker', goal: 'Track remaining steps: stepsLeft = 10, decrease each step, stop at 0.',
+    text: 'The flag is exactly 10 steps away and the path keeps going after it. Count down stepsLeft to stop on time.',
+    map: isle({ 6: '~~A=========E=^~', 4: '~~..T.....*...~~' }), dir: 0,
+    palette: ['move', 'while', 'repeat', 'setVar|name=stepsLeft|value=10', 'changeVar|name=stepsLeft|value=-1', 'cmp|left=stepsLeft|op=>|right=0', 'sensor|name=isPathClear'],
+    objectives: ['exit', { var: 'stepsLeft', op: '==', value: 0 }],
+    solution: 'set stepsLeft = 10 while stepsLeft > 0 { move(1) change stepsLeft by -1 }',
+    hint: 'Set stepsLeft = 10. While ( stepsLeft > 0 ) [ Move (1), Change stepsLeft by -1 ].' },
+  '8.3': { title: 'Vault Code', goal: 'Accumulate totalScore; the vault opens when totalScore >= 100.',
+    text: 'Each gem is worth 25 points. Collect all 4, add to totalScore, then walk through the vault door to the flag.',
+    map: isle({ 4: '~~.....####...~~', 5: '~~AggggDE.#.T.~~', 6: '~~.....####...~~' }), dir: 0,
+    door: { var: 'totalScore', op: '>=', value: 100 },
+    palette: ['move', 'collectGem', 'repeat', 'setVar|name=totalScore|value=0', 'changeVar|name=totalScore|value=25'],
+    objectives: ['gems', { var: 'totalScore', op: '>=', value: 100 }, 'exit'],
+    solution: 'set totalScore = 0 repeat(4) { move(1) gem change totalScore by 25 } move(2)',
+    hint: 'Set totalScore = 0. Repeat 4 [ Move, Collect Gem, Change totalScore by 25 ]. Then Move (2).' },
+
+  // ---------------- Island 9: Types & Properties ----------------
+  '9.1': { title: 'Speed Boost', goal: 'Set the agent property agent.speed = FAST.',
+    text: 'Spike traps hurt slow walkers. Set agent.speed = FAST to dash across, then reach the flag.',
+    map: isle({ 4: '~~~~~~~~~~~~..~~', 5: '~~A==^^=E...T.~~', 6: '~~~~~~~~~~~~..~~' }), dir: 0,
+    palette: ['move', 'setProp|prop=speed|value=FAST'], objectives: ['exit', { uses: 'PROP' }],
+    solution: 'prop speed = FAST move(6)', hint: 'Set agent.speed = FAST, then Move Forward (6). Values: SLOW, FAST.' },
+  '9.2': { title: 'Color Shield', goal: 'Set agent.shieldColor to pass through colored barriers.',
+    text: 'A barrier only lets you through if your shieldColor matches it. Pass the BLUE barrier, then the RED one.',
+    map: isle({ 4: '~~~~~~~~~~~~..~~', 5: '~~A=B==R=E..T.~~', 6: '~~~~~~~~~~~~..~~' }), dir: 0,
+    palette: ['move', 'setProp|prop=shieldColor|value=BLUE'], objectives: ['exit'],
+    solution: 'prop shieldColor = BLUE move(3) prop shieldColor = RED move(4)',
+    hint: 'shieldColor values: BLUE, RED, GREEN, NONE. Change it between the two barriers.' },
+  '9.3': { title: 'Multi-Agent Control', goal: 'Control agent1 and agent2, set distinct properties, move in sync.',
+    text: 'Agent 1 must pass a RED barrier, agent 2 a BLUE one. Give each its own shield, then move both together.',
+    map: isle({ 2: '~~~~~~~~~~~~..~~', 3: '~~A==R===E..T.~~', 4: '~~~~~~~~~~~~..~~', 6: '~~~~~~~~~~~~..~~', 7: '~~a===B==E..T.~~', 8: '~~~~~~~~~~~~..~~' }), dir: 0,
+    palette: ['move', 'agentSelect|agent=1', 'setProp|prop=shieldColor|value=RED', 'setProp|prop=speed|value=FAST'],
+    objectives: ['exit', { uses: 'AGENT' }],
+    solution: 'agent(1) prop shieldColor = RED agent(2) prop shieldColor = BLUE agent(both) move(7)',
+    hint: 'Control agent 1 → shield RED. Control agent 2 → shield BLUE. Control agent both → Move (7).' },
+
+  // ---------------- Island 10: Parameters ----------------
+  '10.1': { title: 'Parameterized Move', goal: 'Function moveSteps(distance) moves the agent distance tiles.',
+    text: 'Define moveSteps(distance) and call it with different numbers to reach the flag.',
+    map: isle({ 3: '~~A===..T...~~~~', 4: '~~...=..T....~~~', 5: '~~.T.====E...~~~' }), dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'repeat', 'defFunc|name=moveSteps|params=distance', 'callFunc|name=moveSteps|args=3'],
+    objectives: ['exit', { uses: 'PARAM' }],
+    solution: 'def moveSteps(distance) { move(distance) } call moveSteps(3) right call moveSteps(2) left call moveSteps(4)',
+    hint: 'Inside the Define block use Move Forward (distance). Then: Call moveSteps(3), Turn Right, Call moveSteps(2), Turn Left, Call moveSteps(4).' },
+  '10.2': { title: 'Shape Drawer', goal: 'Function drawSide(length, color) navigates a polygon path.',
+    text: 'Each side has a different colored barrier. drawSide sets the shield, walks a side, and turns right.',
+    map: isle({ 2: '~~TTTTTTT..T..~~', 3: '~~TA=B==T..*..~~', 4: '~~T~~~~=T.....~~', 5: '~~T~~~~RT..T..~~', 6: '~~TE=V==T.....~~', 7: '~~TTTTTTT.*...~~' }), dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'setProp|prop=shieldColor|value=color', 'defFunc|name=drawSide|params=length, color', 'callFunc|name=drawSide|args=4, BLUE'],
+    objectives: ['exit', { uses: 'PARAM' }],
+    solution: 'def drawSide(length, color) { prop shieldColor = color move(length) right } call drawSide(4, BLUE) call drawSide(3, RED) call drawSide(4, GREEN)',
+    hint: 'Define drawSide(length, color) { Set agent.shieldColor = color, Move (length), Turn Right }. Call it 3 times.' },
+  '10.3': { title: 'Attack & Move', goal: 'Function defeatAndMove(guardDistance, weaponType).',
+    text: 'Guards need a SWORD; the armored guard needs a HAMMER. Walk up to each one and use the right weapon.',
+    map: isle({ 5: '~~A==G===Q==G=E~', 3: '~~..T.....*...~~' }), dir: 0,
+    palette: ['move', 'attackWith|weapon=weaponType', 'defFunc|name=defeatAndMove|params=guardDistance, weaponType', 'callFunc|name=defeatAndMove|args=2, SWORD'],
+    objectives: ['guards', 'exit', { uses: 'PARAM' }],
+    solution: 'def defeatAndMove(guardDistance, weaponType) { move(guardDistance) attack(weaponType) } call defeatAndMove(2, SWORD) call defeatAndMove(4, HAMMER) call defeatAndMove(3, SWORD) move(3)',
+    hint: 'Distances to stand in front of each guard: 2, 4, 3. Weapons: SWORD, HAMMER, SWORD. Then Move (3).' },
+
+  // ---------------- Island 11: World Building ----------------
+  '11.1': { title: 'Bridge Builder', goal: 'Use world.placeBlock(x, y, "BRIDGE") to span the river.',
+    text: 'The river is 2 tiles wide at (7,5) and (8,5). Build bridges, then walk to the flag. Coordinates are shown on the map edges.',
+    map: [
+      '~~~~~~~~~~~~~~~~',
+      '~~~..T.~~...T~~~',
+      '~~.*...~~..*..~~',
+      '~~..T..~~...T.~~',
+      '~~.....~~.....~~',
+      '~~.A===~~==E..~~',
+      '~~.....~~.....~~',
+      '~~.T...~~..*..~~',
+      '~~...*.~~.T...~~',
+      '~~.T...~~.....~~',
+      '~~~~...~~..~~~~~',
+      '~~~~~~~~~~~~~~~~'], dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'placeBlock|tile=BRIDGE|x=7|y=5'], objectives: ['exit', { uses: 'WORLD' }],
+    solution: 'place(BRIDGE, 7, 5) place(BRIDGE, 8, 5) move(8)',
+    hint: 'Place BRIDGE at x 7 y 5 and at x 8 y 5, then Move Forward (8).' },
+  '11.2': { title: 'Portal Placer', goal: 'Spawn linked portals with world.spawnPortal(x1, y1, x2, y2).',
+    text: 'The sea is too wide for bridges. Link a portal on your side to one on the far island.',
+    map: [
+      '~~~~~~~~~~~~~~~~',
+      '~..T..~~~~~..T.~',
+      '~.*...~~~~~....~',
+      '~.....~~~~~.*..~',
+      '~..T..~~~~~....~',
+      '~~A===~~~~~==E.~',
+      '~.....~~~~~....~',
+      '~.*...~~~~~..T.~',
+      '~..T..~~~~~....~',
+      '~.....~~~~~.*..~',
+      '~~~~~~~~~~~~~~~~',
+      '~~~~~~~~~~~~~~~~'], dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'spawnPortal|x1=4|y1=5|x2=12|y2=5'], objectives: ['exit', { uses: 'WORLD' }],
+    solution: 'portal(4, 5, 12, 5) move(3)',
+    hint: 'Portal (4,5) ↔ (12,5), then Move Forward (3). Stepping on a portal teleports you to its twin.' },
+  '11.3': { title: 'Custom Maze Creator', goal: 'Programmatically construct the path the agent will solve.',
+    text: 'Build at least 3 structures: bridge to the gem island, collect the gem, then portal to the flag island.',
+    map: [
+      '~~~~~~~~~~~~~~~~',
+      '~...~~...~~~~~~~',
+      '~.A=~~=g=~~~~~~~',
+      '~.*.~~.T.~~~~~~~',
+      '~~~~~~~~~~~~~~~~',
+      '~~~~~~~~~~~~~~~~',
+      '~~~~~~~~~~~~~~~~',
+      '~~~~~~~~~~~~~~~~',
+      '~~~~~~~~~~~.T..~',
+      '~~~~~~~~~~~.=E.~',
+      '~~~~~~~~~~~..*.~',
+      '~~~~~~~~~~~~~~~~'], dir: 0,
+    palette: ['move', 'turnLeft', 'turnRight', 'collectGem', 'repeat', 'placeBlock|tile=BRIDGE|x=4|y=2', 'spawnPortal'],
+    objectives: ['gems', 'exit', { placed: 3 }],
+    solution: 'place(BRIDGE, 4, 2) place(BRIDGE, 5, 2) portal(8, 2, 12, 9) move(5) gem move(2)',
+    hint: 'Bridges at (4,2) and (5,2). Portal (8,2) ↔ (12,9). Then Move (5), Collect Gem, Move (2).' },
+
+  // ---------------- Island 12: Arrays & Collections ----------------
+  '12.1': { title: 'Coordinate List', goal: 'Iterate the list targets with For Each target in targets.',
+    text: 'targets holds 3 coordinates. For each one: Go To it and collect the gem.',
+    map: [
+      '~~~~~~~~~~~~~~~~',
+      '~A.......T....~~',
+      '~....T........~~',
+      '~.g....T......~~',
+      '~.............~~',
+      '~...g.........~~',
+      '~..T..........~~',
+      '~.....g...T...~~',
+      '~*.......*....~~',
+      '~~...T.....*.~~~',
+      '~~~~........~~~~',
+      '~~~~~~~~~~~~~~~~'], dir: 0,
+    lists: { targets: [[2, 3], [4, 5], [6, 7]] },
+    palette: ['goTo|target=t', 'collectGem', 'forEach|name=t|list=targets'], objectives: ['gems', { uses: 'FOREACH' }],
+    solution: 'foreach t in targets { goto(t) gem }',
+    hint: 'For each t in targets [ Go To (t), Collect Gem ].' },
+  '12.2': { title: 'Inventory Filter', goal: 'Filter the gem list to collect only high-value GOLD gems.',
+    text: 'gems lists every gem with a .type of GOLD or SILVER. Collect only the GOLD ones - silver is cursed!',
+    map: [
+      '~~~~~~~~~~~~~~~~',
+      '~A............~~',
+      '~..$..%.......~~',
+      '~.........T...~~',
+      '~.......$.....~~',
+      '~.%...........~~',
+      '~.T.......%...~~',
+      '~....$........~~',
+      '~..........$..~~',
+      '~~.*.....T...~~~',
+      '~~~~~......~~~~~',
+      '~~~~~~~~~~~~~~~~'], dir: 0, noSilver: true,
+    lists: { gems: 'auto' },
+    palette: ['goTo|target=g', 'collectGem', 'forEach|name=g|list=gems', 'if', 'cmp|left=g.type|op===|right=GOLD'],
+    objectives: ['gems', { uses: 'FOREACH' }],
+    solution: 'foreach g in gems { if g.type == GOLD { goto(g) gem } }',
+    hint: 'For each g in gems [ If ( g.type == GOLD ) → Go To (g), Collect Gem ].' },
+  '12.3': { title: 'Waypoint Master', goal: 'Sort waypoints by distance before moving.',
+    text: 'Visit every waypoint, nearest one first (distance from your start). The list is scrambled - sort it first!',
+    map: [
+      '~~~~~~~~~~~~~~~~',
+      '~A............~~',
+      '~..w..........~~',
+      '~.T...........~~',
+      '~.........*...~~',
+      '~...T.........~~',
+      '~......w......~~',
+      '~..........T..~~',
+      '~...........w.~~',
+      '~....w........~~',
+      '~~~..*....~~~~~~',
+      '~~~~~~~~~~~~~~~~'], dir: 0,
+    lists: { waypoints: [[12, 8], [3, 2], [7, 6], [5, 9]] },
+    palette: ['goTo|target=w', 'forEach|name=w|list=waypoints', 'sortList|list=waypoints'],
+    objectives: ['beacons', { uses: 'SORT' }],
+    solution: 'sort(waypoints) foreach w in waypoints { goto(w) }',
+    hint: 'Sort waypoints by distance, then For each w in waypoints [ Go To (w) ].' }
+};
+// Attach ids / kinds
+Object.keys(SUBSTAGE_DATA).forEach(id => {
+  const d = SUBSTAGE_DATA[id]; const [isl, sub] = id.split('.').map(Number);
+  d.id = id; d.island = isl; d.sub = sub; d.kind = KIND_NAMES[sub - 1];
+});
+const SUBSTAGE_ORDER = Object.keys(SUBSTAGE_DATA).sort((a, b) => { const [a1, a2] = a.split('.').map(Number), [b1, b2] = b.split('.').map(Number); return a1 - b1 || a2 - b2; });
+
+// ---------- Seeded RNG & generators ----------
+function mulberry32(a) {
+  return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function genMaze(seed) {
+  const rng = mulberry32(seed);
+  const g = Array.from({ length: ROWS }, () => Array(COLS).fill('T'));
+  const CW = 7, CH = 5, seen = Array.from({ length: CH }, () => Array(CW).fill(false));
+  const stack = [[0, 0]]; seen[0][0] = true; g[1][1] = '=';
+  while (stack.length) {
+    const [cx, cy] = stack[stack.length - 1];
+    const nb = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [cx + dx, cy + dy, dx, dy])
+      .filter(([nx, ny]) => nx >= 0 && ny >= 0 && nx < CW && ny < CH && !seen[ny][nx]);
+    if (!nb.length) { stack.pop(); continue; }
+    const [nx, ny, dx, dy] = nb[Math.floor(rng() * nb.length)];
+    seen[ny][nx] = true; g[1 + cy * 2 + dy][1 + cx * 2 + dx] = '='; g[1 + ny * 2][1 + nx * 2] = '=';
+    stack.push([nx, ny]);
+  }
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (g[y][x] === 'T' && rng() < 0.3) g[y][x] = '#';
+  g[1][1] = 'A'; g[9][13] = 'E';
+  return g.map(r => r.join(''));
+}
+function applyRandomFill(rows, rf, rng) {
+  const spots = []; rows.forEach((r, y) => [...r].forEach((c, x) => { if (c === '?') spots.push([x, y]); }));
+  const g = rows.map(r => r.split(''));
+  if (rf.mode === 'one') {
+    const pick = Math.floor(rng() * spots.length);
+    spots.forEach(([x, y], i) => { g[y][x] = i === pick ? rf.item : '='; });
+  } else {
+    const need = rf.options.filter(o => o !== '=');
+    for (let tries = 0; tries < 40; tries++) {
+      spots.forEach(([x, y]) => { g[y][x] = rf.options[Math.floor(rng() * rf.options.length)]; });
+      if (need.every(o => spots.some(([x, y]) => g[y][x] === o))) break;
+    }
+  }
+  return g.map(r => r.join(''));
+}
+function levelRows(level, seed, variant) {
+  let rows = level.mazeSeeds ? genMaze(level.mazeSeeds[variant || 0]) : level.map.slice();
+  if (level.randomFill) rows = applyRandomFill(rows, level.randomFill, mulberry32(seed >>> 0));
+  return rows;
+}
+
+// ---------- World model ----------
+class GameError extends Error {}
+class StopSignal extends Error {}
+const manhattan = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+
+function buildWorld(level, seed, variant) {
+  const rows = levelRows(level, seed, variant);
+  const w = { level, seed, variant: variant || 0, tiles: [], gems: [], keys: [], guards: [], switches: [], exits: [], barriers: [], beacons: [],
+    portals: [], agents: [], vars: {}, keysHeld: 0, placed: 0, steps: 0, openDoors: new Set(), beaconsDone: 0, sel: [0], events: [] };
+  const put = (ch, x, y) => {
+    switch (ch) {
+      case 'A': w.agents.push({ id: 1, x, y, dir: level.dir || 0, speed: 'SLOW', shieldColor: 'NONE', tp: 0 }); break;
+      case 'a': w.agents.push({ id: 2, x, y, dir: level.dir || 0, speed: 'SLOW', shieldColor: 'NONE', tp: 0 }); break;
+      case 'g': w.gems.push({ x, y, type: 'NORMAL', taken: false }); break;
+      case '$': w.gems.push({ x, y, type: 'GOLD', taken: false }); break;
+      case '%': w.gems.push({ x, y, type: 'SILVER', taken: false }); break;
+      case 'k': w.keys.push({ x, y, taken: false }); break;
+      case 'G': w.guards.push({ x, y, needs: 'SWORD', alive: true }); break;
+      case 'Q': w.guards.push({ x, y, needs: 'HAMMER', alive: true, armored: true }); break;
+      case 'E': w.exits.push({ x, y }); break;
+      case 's': w.switches.push({ x, y, on: false }); break;
+      case 'B': w.barriers.push({ x, y, color: 'BLUE' }); break;
+      case 'R': w.barriers.push({ x, y, color: 'RED' }); break;
+      case 'V': w.barriers.push({ x, y, color: 'GREEN' }); break;
+      case 'w': w.beacons.push({ x, y, active: false }); break;
+    }
+  };
+  for (let y = 0; y < ROWS; y++) {
+    const row = []; w.tiles.push(row);
+    for (let x = 0; x < COLS; x++) {
+      const ch = rows[y][x];
+      if (ch in TILE_CHARS) row.push(TILE_CHARS[ch]);
+      else { row.push(T.PATH); put(ch, x, y); }
+    }
+  }
+  (level.extra || []).forEach(e => put(e.ch, e.x, e.y));
+  w.agents.sort((a, b) => a.id - b.id);
+  w.start = { x: w.agents[0].x, y: w.agents[0].y };
+  if (level.lists) for (const name in level.lists) {
+    const src = level.lists[name];
+    w.vars[name] = src === 'auto' ? w.gems.map(g => ({ x: g.x, y: g.y, type: g.type })) : src.map(([x, y]) => ({ x, y }));
+  }
+  // Beacons must be visited nearest-first measured from the start tile
+  w.beaconOrder = w.beacons.slice().sort((a, b) => manhattan(a, w.start) - manhattan(b, w.start));
+  return w;
+}
+const inBounds = (x, y) => x >= 0 && y >= 0 && x < COLS && y < ROWS;
+const at = (list, x, y, pred) => list.find(e => e.x === x && e.y === y && (!pred || pred(e)));
+function tileIsBlocking(w, x, y) {
+  if (!inBounds(x, y)) return true;
+  const t = w.tiles[y][x];
+  if (WALLS.has(t)) return true;
+  if (t === T.DOOR && !w.openDoors.has(x + ',' + y)) return true;
+  if (at(w.guards, x, y, g => g.alive)) return true;
+  return false;
+}
+function compareValues(a, op, b) {
+  if (typeof a === 'string' || typeof b === 'string') { a = String(a).toUpperCase(); b = String(b).toUpperCase(); }
+  switch (op) {
+    case '==': return a == b; case '!=': return a != b; case '>': return a > b; case '<': return a < b;
+    case '>=': return a >= b; case '<=': return a <= b;
+  }
+  throw new GameError('Unknown comparison ' + op);
+}
+
+// ---------- Expressions ----------
+function evalExpr(src, lookup) {
+  src = String(src == null ? '' : src).trim();
+  if (src === '') throw new GameError('An input box is empty - type a number or name.');
+  const toks = []; const re = /\s*(\d+(?:\.\d+)?|"[^"]*"|'[^']*'|[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*|[()+\-*/%,])/y;
+  let m, pos = 0;
+  while (pos < src.length) {
+    re.lastIndex = pos; m = re.exec(src);
+    if (!m) { if (/^\s*$/.test(src.slice(pos))) break; throw new GameError('Cannot understand "' + src + '"'); }
+    toks.push(m[1]); pos = re.lastIndex;
+  }
+  let i = 0;
+  const peek = () => toks[i], next = () => toks[i++];
+  function ident(name) {
+    const parts = name.split('.');
+    let v = lookup(parts[0]);
+    if (v === undefined) {
+      if (parts.length === 1 && /^[A-Z][A-Z_0-9]*$/.test(name)) return name; // constant like BLUE, FAST, GOLD
+      throw new GameError('Unknown variable "' + parts[0] + '"');
+    }
+    for (let k = 1; k < parts.length; k++) {
+      if (v == null || typeof v !== 'object' || !(parts[k] in v)) throw new GameError('"' + parts.slice(0, k).join('.') + '" has no property "' + parts[k] + '"');
+      v = v[parts[k]];
+    }
+    return v;
+  }
+  function factor() {
+    const t = next();
+    if (t === undefined) throw new GameError('Incomplete expression "' + src + '"');
+    if (t === '-') return -num(factor());
+    if (t === '(') {
+      const a = expr();
+      if (peek() === ',') { next(); const b = expr(); if (next() !== ')') throw new GameError('Missing ")" in "' + src + '"'); return { x: num(a), y: num(b) }; }
+      if (next() !== ')') throw new GameError('Missing ")" in "' + src + '"');
+      return a;
+    }
+    if (/^\d/.test(t)) return parseFloat(t);
+    if (/^["']/.test(t)) return t.slice(1, -1);
+    if (/^[A-Za-z_]/.test(t)) return ident(t);
+    throw new GameError('Unexpected "' + t + '" in "' + src + '"');
+  }
+  function num(v) { if (typeof v !== 'number' || isNaN(v)) throw new GameError('Expected a number but got "' + fmtVal(v) + '"'); return v; }
+  function term() {
+    let v = factor();
+    while (['*', '/', '%'].includes(peek())) { const op = next(); const r = num(factor()); v = num(v); v = op === '*' ? v * r : op === '/' ? Math.floor(v / r) : v % r; }
+    return v;
+  }
+  function expr() {
+    let v = term();
+    while (peek() === '+' || peek() === '-') {
+      const op = next(); const r = term();
+      if (op === '+' && (typeof v === 'string' || typeof r === 'string')) v = String(v) + String(r);
+      else v = op === '+' ? num(v) + num(r) : num(v) - num(r);
+    }
+    return v;
+  }
+  const v = expr();
+  if (i < toks.length) throw new GameError('Unexpected "' + toks[i] + '" in "' + src + '"');
+  return v;
+}
+function fmtVal(v) {
+  if (Array.isArray(v)) return '[' + v.map(fmtVal).join(', ') + ']';
+  if (v && typeof v === 'object') return v.type ? '(' + v.x + ',' + v.y + ' ' + v.type + ')' : '(' + v.x + ',' + v.y + ')';
+  return String(v);
+}
+
+// ---------- Text DSL (used for reference solutions) -> AST ----------
+let _nodeSeq = 0;
+const newId = () => 'n' + (++_nodeSeq);
+function parseDSL(src) {
+  const toks = src.match(/-?\d+|[A-Za-z_][\w.]*|==|!=|>=|<=|[{}(),=<>]/g) || [];
+  let i = 0;
+  const peek = () => toks[i], next = () => toks[i++];
+  const expect = t => { const n = next(); if (n !== t) throw new Error('DSL: expected ' + t + ' got ' + n + ' at ' + i); };
+  const args = () => { expect('('); const out = []; let cur = []; while (peek() !== ')') { const t = next(); if (t === ',') { out.push(cur.join(' ')); cur = []; } else cur.push(t); } next(); if (cur.length) out.push(cur.join(' ')); return out; };
+  const block = () => { expect('{'); const b = list('}'); expect('}'); return b; };
+  function cond() { let a = condAnd(); while (peek() === 'or') { next(); a = { type: 'OR', a, b: condAnd() }; } return a; }
+  function condAnd() { let a = condNot(); while (peek() === 'and') { next(); a = { type: 'AND', a, b: condNot() }; } return a; }
+  function condNot() {
+    if (peek() === 'not') { next(); return { type: 'NOT', a: condNot() }; }
+    if (peek() === '(') { next(); const c = cond(); expect(')'); return c; }
+    const id = next();
+    if (['==', '!=', '>', '<', '>=', '<='].includes(peek())) { const op = next(); return { type: 'CMP', left: id, op, right: next() }; }
+    if (!(id in SENSORS)) throw new Error('DSL: unknown sensor ' + id);
+    return { type: 'SENSOR', name: id };
+  }
+  const simple = { left: 'turnLeft', right: 'turnRight', gem: 'collectGem', key: 'collectKey', item: 'collectItem', switch: 'toggleSwitch' };
+  function stmt() {
+    const w = next(); const id = newId();
+    if (simple[w]) return { id, type: 'ACTION', command: simple[w], params: [] };
+    switch (w) {
+      case 'move': return { id, type: 'ACTION', command: 'moveForward', params: peek() === '(' ? args() : ['1'] };
+      case 'attack': return { id, type: 'ACTION', command: 'attack', params: peek() === '(' ? args() : [] };
+      case 'goto': return { id, type: 'ACTION', command: 'goTo', params: args() };
+      case 'repeat': { const p = args(); return { id, type: 'REPEAT', params: p, children: block() }; }
+      case 'while': { const c = cond(); return { id, type: 'WHILE', condition: c, children: block() }; }
+      case 'if': { const c = cond(); const ch = block(); const n = { id, type: 'IF', condition: c, children: ch }; if (peek() === 'else') { next(); n.elseChildren = block(); } return n; }
+      case 'def': { const name = next(); const p = args(); return { id, type: 'FUNC_DEF', name, paramNames: p, children: block() }; }
+      case 'call': { const name = next(); return { id, type: 'CALL', name, args: args() }; }
+      case 'set': { const name = next(); expect('='); return { id, type: 'VAR_SET', name, params: [next()] }; }
+      case 'change': { const name = next(); expect('by'); return { id, type: 'VAR_CHANGE', name, params: [next()] }; }
+      case 'prop': { const name = next(); expect('='); return { id, type: 'PROP_SET', name, params: [next()] }; }
+      case 'agent': return { id, type: 'AGENT', name: args()[0] };
+      case 'place': return { id, type: 'WORLD', command: 'placeBlock', params: args() };
+      case 'portal': return { id, type: 'WORLD', command: 'spawnPortal', params: args() };
+      case 'foreach': { const name = next(); expect('in'); const list = next(); return { id, type: 'FOREACH', name, list, children: block() }; }
+      case 'sort': return { id, type: 'SORT', list: args()[0] };
+    }
+    throw new Error('DSL: unknown statement ' + w);
+  }
+  function list(end) { const out = []; while (i < toks.length && peek() !== end) out.push(stmt()); return out; }
+  const prog = list(undefined);
+  return prog;
+}
+
+// ---------- AST analysis ----------
+function walkAST(nodes, fn) {
+  (nodes || []).forEach(n => { fn(n); walkAST(n.children, fn); walkAST(n.elseChildren, fn); });
+}
+function walkCond(c, fn) { if (!c) return; fn(c); walkCond(c.a, fn); walkCond(c.b, fn); }
+function countBlocks(ast) { let n = 0; walkAST(ast, () => n++); return n; }
+function collectUses(ast) {
+  const u = new Set(); let hasDef = false, hasCall = false, defParams = false, callArgs = false;
+  walkAST(ast, n => {
+    u.add(n.type);
+    if (n.type === 'FUNC_DEF') { hasDef = true; if (n.paramNames.filter(s => s.trim()).length) defParams = true; }
+    if (n.type === 'CALL') { hasCall = true; if (n.args.filter(s => String(s).trim()).length) callArgs = true; }
+    if (n.type === 'VAR_SET' || n.type === 'VAR_CHANGE') u.add('VAR');
+    if (n.type === 'PROP_SET') u.add('PROP');
+    walkCond(n.condition, c => u.add(c.type));
+  });
+  if (hasDef && hasCall) u.add('FUNC');
+  if (defParams && callArgs) u.add('PARAM');
+  return u;
+}
+
+// ---------- Objectives ----------
+function evalObjectives(level, w, ast) {
+  const uses = collectUses(ast || []);
+  return level.objectives.map(o => {
+    if (typeof o === 'string') {
+      switch (o) {
+        case 'gems': {
+          const list = w.gems.filter(g => g.type !== 'SILVER'), got = list.filter(g => g.taken).length;
+          const what = level.noSilver ? 'GOLD gems (leave silver!)' : 'gems';
+          return { label: `Collect all ${list.length} ${what} 💎 (${got}/${list.length})`, done: got === list.length };
+        }
+        case 'keys': { const got = w.keys.filter(k => k.taken).length; return { label: `Collect all ${w.keys.length} keys 🔑 (${got}/${w.keys.length})`, done: got === w.keys.length }; }
+        case 'switches': { const got = w.switches.filter(s => s.on).length; return { label: `Activate all ${w.switches.length} switches 🔘 (${got}/${w.switches.length})`, done: got === w.switches.length }; }
+        case 'guards': { const got = w.guards.filter(g => !g.alive).length; return { label: `Defeat all ${w.guards.length} guards ⚔️ (${got}/${w.guards.length})`, done: got === w.guards.length }; }
+        case 'exit': {
+          const done = w.agents.every(a => at(w.exits, a.x, a.y));
+          return { label: w.agents.length > 1 ? 'Both agents reach their flags 🚩' : 'Reach the exit flag 🚩', done };
+        }
+        case 'beacons': return { label: `Visit all ${w.beacons.length} waypoints nearest-first 📍 (${w.beaconsDone}/${w.beacons.length})`, done: w.beaconsDone === w.beacons.length };
+      }
+    }
+    if (o.var) {
+      const v = w.vars[o.var];
+      return { label: `${o.var} ${o.op} ${o.value} at the end (now: ${v === undefined ? '—' : fmtVal(v)})`, done: v !== undefined && compareValues(v, o.op, o.value) };
+    }
+    if (o.placed) return { label: `Build at least ${o.placed} structures 🏗️ (${w.placed}/${o.placed})`, done: w.placed >= o.placed };
+    if (o.uses) return { label: USES_LABELS[o.uses], done: uses.has(o.uses), uses: true };
+    return { label: '?', done: false };
+  });
+}
+
+// ==========================================
+// 5. SUB-STAGE PUZZLE INTERPRETER
+// ==========================================
+class Runner {
+  constructor(level, world, program, hooks) {
+    this.L = level; this.w = world; this.prog = program; this.h = hooks || {};
+    this.frames = []; this.funcs = {}; this.ticks = 0; this.abort = false; this.depth = 0;
+  }
+  async run() {
+    try {
+      walkAST(this.prog, n => { if (n.type === 'FUNC_DEF') this.funcs[n.name.trim()] = n; });
+      await this.execList(this.prog);
+      return { ok: true };
+    } catch (e) {
+      if (e instanceof StopSignal) return { ok: false, stopped: true };
+      if (e instanceof GameError) return { ok: false, error: e.message };
+      return { ok: false, error: 'Internal error: ' + e.message };
+    }
+  }
+  stop() { this.abort = true; }
+  async wait(kind) { if (this.abort) throw new StopSignal(); if (this.h.wait) await this.h.wait(kind); if (this.abort) throw new StopSignal(); }
+  tick() { if (++this.ticks > 6000) throw new GameError('Too many loop cycles - is there an infinite loop?'); }
+  emit(ev) { if (this.h.event) this.h.event(ev, this.w); }
+  log(msg, cls) { if (this.h.log) this.h.log(msg, cls); }
+  // --- scope ---
+  lookup(name) {
+    for (let i = this.frames.length - 1; i >= 0; i--) if (name in this.frames[i]) return this.frames[i][name];
+    if (name in this.w.vars) return this.w.vars[name];
+    if (name === 'agent') { const a = this.agent(); return { x: a.x, y: a.y, speed: a.speed, shieldColor: a.shieldColor }; }
+    return undefined;
+  }
+  setVar(name, v) {
+    name = String(name || '').trim();
+    if (!/^[A-Za-z_]\w*$/.test(name)) throw new GameError('"' + name + '" is not a valid variable name');
+    const f = this.frames[this.frames.length - 1];
+    if (f && name in f) f[name] = v; else this.w.vars[name] = v;
+    this.emit({ type: 'vars' });
+  }
+  ev(src) { return evalExpr(src, n => this.lookup(n)); }
+  num(src, what) {
+    const v = this.ev(src);
+    if (typeof v !== 'number' || isNaN(v)) throw new GameError((what || 'Value') + ' must be a number, got "' + fmtVal(v) + '"');
+    return Math.floor(v);
+  }
+  agent() { return this.w.agents[this.w.sel[0]] || this.w.agents[0]; }
+  selAgents() { return this.w.sel.map(i => this.w.agents[i]); }
+  // --- execution ---
+  async execList(nodes) { for (const n of nodes || []) await this.exec(n); }
+  async exec(n) {
+    this.tick();
+    if (this.h.highlight) this.h.highlight(n.id);
+    switch (n.type) {
+      case 'ACTION': return this.action(n);
+      case 'REPEAT': {
+        const k = this.num(n.params[0], 'Repeat count');
+        if (k < 0 || k > 500) throw new GameError('Repeat count must be between 0 and 500');
+        await this.wait('flow');
+        for (let i = 0; i < k; i++) { this.tick(); await this.execList(n.children); }
+        return;
+      }
+      case 'WHILE': {
+        await this.wait('flow');
+        while (this.cond(n.condition, 'While')) {
+          await this.execList(n.children);
+          this.tick(); if (this.h.highlight) this.h.highlight(n.id);
+          if (!(n.children || []).length) throw new GameError('The While loop is empty - it would loop forever!');
+        }
+        return;
+      }
+      case 'IF': {
+        await this.wait('flow');
+        if (this.cond(n.condition, 'If')) await this.execList(n.children);
+        else if (n.elseChildren) await this.execList(n.elseChildren);
+        return;
+      }
+      case 'FUNC_DEF': return;
+      case 'CALL': {
+        const name = String(n.name || '').trim(), f = this.funcs[name];
+        if (!f) throw new GameError('Function "' + name + '" is not defined - add a Define block.');
+        const pn = f.paramNames.map(s => s.trim()).filter(Boolean), av = (n.args || []).map(s => String(s).trim()).filter(Boolean);
+        if (pn.length !== av.length) throw new GameError(`${name}() expects ${pn.length} argument(s) but got ${av.length}`);
+        const frame = {}; pn.forEach((p, i) => { frame[p] = this.ev(av[i]); });
+        if (++this.depth > 40) throw new GameError('Too many nested function calls');
+        this.log(`📞 ${name}(${av.join(', ')})`, 'info');
+        await this.wait('flow');
+        this.frames.push(frame);
+        try { await this.execList(f.children); } finally { this.frames.pop(); this.depth--; }
+        return;
+      }
+      case 'VAR_SET': this.setVar(n.name, this.ev(n.params[0])); this.log(`📝 ${n.name} = ${fmtVal(this.lookup(n.name))}`); await this.wait('flow'); return;
+      case 'VAR_CHANGE': {
+        const cur = this.lookup(String(n.name).trim());
+        if (typeof cur !== 'number') throw new GameError('Variable "' + n.name + '" must be Set to a number first');
+        this.setVar(n.name, cur + this.num(n.params[0], 'Change amount'));
+        this.log(`📝 ${n.name} = ${this.lookup(String(n.name).trim())}`); await this.wait('flow'); return;
+      }
+      case 'PROP_SET': {
+        const prop = n.name, val = String(this.ev(n.params[0])).toUpperCase();
+        const allowed = prop === 'speed' ? ['SLOW', 'FAST'] : ['NONE', 'BLUE', 'RED', 'GREEN'];
+        if (!allowed.includes(val)) throw new GameError(`agent.${prop} must be one of ${allowed.join(', ')} (got "${val}")`);
+        this.selAgents().forEach(a => { a[prop] = val; });
+        this.log(`🎨 agent${this.w.agents.length > 1 ? this.w.sel.map(i => i + 1).join('&') : ''}.${prop} = ${val}`);
+        this.emit({ type: 'prop' }); await this.wait('action'); return;
+      }
+      case 'AGENT': {
+        const v = String(n.name).trim();
+        if (v === 'both') this.w.sel = this.w.agents.map((_, i) => i);
+        else { const i = parseInt(v, 10) - 1; if (!this.w.agents[i]) throw new GameError('There is no agent ' + v + ' on this map'); this.w.sel = [i]; }
+        this.log('🤖 Controlling agent ' + v); await this.wait('flow'); return;
+      }
+      case 'WORLD': return this.worldAction(n);
+      case 'FOREACH': {
+        const list = this.lookup(String(n.list).trim());
+        if (!Array.isArray(list)) throw new GameError('"' + n.list + '" is not a list');
+        const name = String(n.name).trim();
+        if (!/^[A-Za-z_]\w*$/.test(name)) throw new GameError('"' + name + '" is not a valid loop variable name');
+        await this.wait('flow');
+        for (const item of list.slice()) { this.tick(); this.setVar(name, item); await this.execList(n.children); }
+        return;
+      }
+      case 'SORT': {
+        const name = String(n.list).trim(), list = this.lookup(name);
+        if (!Array.isArray(list)) throw new GameError('"' + name + '" is not a list');
+        const a = this.agent();
+        list.sort((p, q) => manhattan(p, a) - manhattan(q, a));
+        this.log(`↕️ ${name} sorted: ${fmtVal(list)}`, 'info'); this.emit({ type: 'vars' }); await this.wait('action'); return;
+      }
+    }
+    throw new GameError('Unknown block type ' + n.type);
+  }
+  // --- conditions ---
+  cond(c, where) {
+    if (!c) throw new GameError(`The ${where} block needs a condition - drag a Sensor chip into its socket.`);
+    switch (c.type) {
+      case 'SENSOR': return this.sensor(c.name);
+      case 'NOT': if (!c.a) throw new GameError('The NOT chip is empty'); return !this.cond(c.a, where);
+      case 'AND': if (!c.a || !c.b) throw new GameError('The AND chip needs two conditions'); return this.cond(c.a, where) && this.cond(c.b, where);
+      case 'OR': if (!c.a || !c.b) throw new GameError('The OR chip needs two conditions'); return this.cond(c.a, where) || this.cond(c.b, where);
+      case 'CMP': return compareValues(this.ev(c.left), c.op, this.ev(c.right));
+    }
+    throw new GameError('Unknown condition');
+  }
+  sensor(name) {
+    const w = this.w, a = this.agent(), [dx, dy] = DIRS[a.dir];
+    const ax = a.x + dx, ay = a.y + dy;
+    const side = d => { const [sx, sy] = DIRS[(a.dir + d + 4) % 4]; return !tileIsBlocking(w, a.x + sx, a.y + sy); };
+    switch (name) {
+      case 'isPathClear': return !tileIsBlocking(w, ax, ay);
+      case 'isBlocked': return tileIsBlocking(w, ax, ay);
+      case 'isLeftClear': return side(-1);
+      case 'isRightClear': return side(1);
+      case 'isOnGem': return !!at(w.gems, a.x, a.y, g => !g.taken);
+      case 'isOnKey': return !!at(w.keys, a.x, a.y, k => !k.taken);
+      case 'isOnSwitch': return !!at(w.switches, a.x, a.y, s => !s.on);
+      case 'isWaterAhead': return inBounds(ax, ay) && w.tiles[ay][ax] === T.WATER;
+      case 'isTrapAhead': return inBounds(ax, ay) && w.tiles[ay][ax] === T.TRAP;
+      case 'isGuardAhead': return !!at(w.guards, ax, ay, g => g.alive);
+      case 'isAtExit': return !!at(w.exits, a.x, a.y);
+      case 'hasKey': return w.keysHeld > 0;
+      case 'allGemsCollected': return w.gems.every(g => g.taken || g.type === 'SILVER');
+    }
+    throw new GameError('Unknown sensor "' + name + '"');
+  }
+  // --- actions ---
+  countStep() { if (++this.w.steps > 2500) throw new GameError('Too many steps - is there an infinite loop?'); }
+  stepAgent(a, dir) {
+    const w = this.w, [dx, dy] = DIRS[dir], nx = a.x + dx, ny = a.y + dy;
+    const who = w.agents.length > 1 ? `Agent ${a.id}` : 'The agent';
+    if (!inBounds(nx, ny)) throw new GameError(`${who} cannot walk off the edge of the map!`);
+    const t = w.tiles[ny][nx];
+    if (WALLS.has(t)) { this.emit({ type: 'bump', a }); throw new GameError(`Bonk! ${who} walked into a ${['', '', 'stone wall', 'tree', 'house'][t]} at (${nx},${ny}).`); }
+    if (t === T.DOOR && !w.openDoors.has(nx + ',' + ny)) {
+      const d = this.L.door;
+      if (d) {
+        const v = w.vars[d.var];
+        if (v === undefined || !compareValues(v, d.op, d.value)) throw new GameError(`The vault door is locked: needs ${d.var} ${d.op} ${d.value} (now ${v === undefined ? 'not set' : v}).`);
+      } else if (w.keysHeld < 1) throw new GameError('The door is locked - collect a key first!');
+      w.openDoors.add(nx + ',' + ny); this.log('🚪 Door unlocked!', 'ok'); this.emit({ type: 'door', x: nx, y: ny });
+    }
+    const g = at(w.guards, nx, ny, g => g.alive);
+    if (g) throw new GameError(`A guard blocks the way at (${nx},${ny}) - Attack it first!`);
+    const b = at(w.barriers, nx, ny);
+    if (b && a.shieldColor !== b.color) throw new GameError(`The ${b.color} barrier blocks ${who.toLowerCase()} (shieldColor is ${a.shieldColor}).`);
+    a.x = nx; a.y = ny;
+    if (t === T.WATER) { this.emit({ type: 'splash', x: nx, y: ny }); throw new GameError(`Splash! ${who} fell into the water at (${nx},${ny}).`); }
+    if (t === T.TRAP && a.speed !== 'FAST') { this.emit({ type: 'hurt', x: nx, y: ny }); throw new GameError(`Ouch! Spike trap at (${nx},${ny}). Too slow to cross it!`); }
+    const p = w.portals.find(p => (p.x1 === nx && p.y1 === ny) || (p.x2 === nx && p.y2 === ny));
+    if (p) {
+      const tx = p.x1 === nx && p.y1 === ny ? p.x2 : p.x1, ty = p.x1 === nx && p.y1 === ny ? p.y2 : p.y1;
+      this.emit({ type: 'portal', x: nx, y: ny }); a.x = tx; a.y = ty; a.tp++; this.log(`🌀 Teleported to (${tx},${ty})`, 'info');
+    }
+    if (this.L.autoCollect) { const gem = at(w.gems, a.x, a.y, g => !g.taken); if (gem) this.takeGem(gem); }
+  }
+  takeGem(gem) {
+    if (gem.type === 'SILVER' && this.L.noSilver) throw new GameError('Cursed! That was a SILVER gem - only collect GOLD ones.');
+    gem.taken = true; this.log(`💎 Collected ${gem.type === 'NORMAL' ? 'a gem' : 'a ' + gem.type + ' gem'}!`, 'ok'); this.emit({ type: 'gem', x: gem.x, y: gem.y });
+  }
+  async moveTiles(n) {
+    if (n < 0 || n > 100) throw new GameError('Move distance must be between 0 and 100');
+    for (let i = 0; i < n; i++) {
+      this.countStep();
+      this.selAgents().forEach(a => this.stepAgent(a, a.dir));
+      await this.wait('action');
+    }
+  }
+  async action(n) {
+    const w = this.w, a = this.agent(), P = n.params || [];
+    switch (n.command) {
+      case 'moveForward': return this.moveTiles(this.num(P[0] == null ? '1' : P[0], 'Move distance'));
+      case 'turnLeft': case 'turnRight':
+        this.countStep(); this.selAgents().forEach(ag => { ag.dir = (ag.dir + (n.command === 'turnLeft' ? 3 : 1)) % 4; });
+        return this.wait('action');
+      case 'collectGem': case 'collectKey': case 'collectItem': {
+        this.countStep();
+        for (const ag of this.selAgents()) {
+          const gem = n.command !== 'collectKey' && at(w.gems, ag.x, ag.y, g => !g.taken);
+          const key = n.command !== 'collectGem' && at(w.keys, ag.x, ag.y, k => !k.taken);
+          if (gem) this.takeGem(gem);
+          else if (key) { key.taken = true; w.keysHeld++; this.log('🔑 Collected a key!', 'ok'); this.emit({ type: 'key', x: key.x, y: key.y }); }
+          else { this.log(`🤔 Nothing to collect at (${ag.x},${ag.y}).`); this.emit({ type: 'say', text: 'Nothing here!' }); }
+        }
+        return this.wait('action');
+      }
+      case 'toggleSwitch': {
+        this.countStep();
+        const s = at(w.switches, a.x, a.y);
+        if (s && !s.on) { s.on = true; this.log('🔘 Switch activated!', 'ok'); this.emit({ type: 'switch', x: s.x, y: s.y }); }
+        else { this.log(s ? '🔘 Already on.' : `🤔 No switch at (${a.x},${a.y}).`); this.emit({ type: 'say', text: s ? 'Already on!' : 'No switch here!' }); }
+        return this.wait('action');
+      }
+      case 'attack': {
+        this.countStep();
+        const weapon = P.length && String(P[0]).trim() ? String(this.ev(P[0])).toUpperCase() : 'SWORD';
+        if (!['SWORD', 'HAMMER', 'BOW'].includes(weapon)) throw new GameError(`Unknown weapon "${weapon}" - use SWORD or HAMMER.`);
+        for (const ag of this.selAgents()) {
+          const [dx, dy] = DIRS[ag.dir], g = at(w.guards, ag.x + dx, ag.y + dy, g => g.alive);
+          this.emit({ type: 'attack', a: ag });
+          if (!g) { this.log('⚔️ Swish! Nothing to attack.'); continue; }
+          if (g.needs !== weapon) throw new GameError(`The ${g.armored ? 'armored ' : ''}guard shrugs off your ${weapon}! It needs a ${g.needs}.`);
+          g.alive = false; this.log(`⚔️ Guard defeated with ${weapon}!`, 'ok'); this.emit({ type: 'defeat', x: g.x, y: g.y });
+        }
+        return this.wait('action');
+      }
+      case 'goTo': {
+        const t = this.ev(P[0]);
+        if (!t || typeof t !== 'object' || typeof t.x !== 'number') throw new GameError('Go To needs a coordinate like t or (3,4), got "' + fmtVal(t) + '"');
+        if (!inBounds(t.x, t.y)) throw new GameError(`(${t.x},${t.y}) is outside the map`);
+        this.log(`📍 Going to (${t.x},${t.y})`);
+        for (const ag of this.selAgents()) {
+          while (ag.x !== t.x) { this.countStep(); ag.dir = t.x > ag.x ? 0 : 2; this.stepAgent(ag, ag.dir); await this.wait('action'); }
+          while (ag.y !== t.y) { this.countStep(); ag.dir = t.y > ag.y ? 1 : 3; this.stepAgent(ag, ag.dir); await this.wait('action'); }
+          const bc = at(w.beacons, ag.x, ag.y, b => !b.active);
+          if (bc) {
+            if (w.beaconOrder[w.beaconsDone] !== bc) throw new GameError(`Wrong order! (${bc.x},${bc.y}) is not the nearest unvisited waypoint. Sort the list first.`);
+            bc.active = true; w.beaconsDone++; this.log(`📍 Waypoint ${w.beaconsDone} activated!`, 'ok'); this.emit({ type: 'beacon', x: bc.x, y: bc.y });
+          }
+        }
+        return;
+      }
+    }
+    throw new GameError('Unknown action ' + n.command);
+  }
+  async worldAction(n) {
+    const w = this.w, P = n.params || [];
+    if (n.command === 'placeBlock') {
+      const type = String(P[0]).trim().toUpperCase(), x = this.num(P[1], 'x'), y = this.num(P[2], 'y');
+      if (!inBounds(x, y)) throw new GameError(`(${x},${y}) is outside the map (x 0-15, y 0-11)`);
+      const t = w.tiles[y][x];
+      if (type === 'BRIDGE') { if (t !== T.WATER) throw new GameError(`A BRIDGE must be placed on water - (${x},${y}) is not water.`); }
+      else if (type === 'STONE' || type === 'PATH') {
+        if (t === T.WATER || WALLS.has(t)) throw new GameError(`Cannot place ${type} on (${x},${y}).`);
+        if (type === 'STONE' && w.agents.some(a => a.x === x && a.y === y)) throw new GameError('Cannot place STONE on top of an agent!');
+      } else throw new GameError('Unknown tile type ' + type);
+      this.countStep(); w.tiles[y][x] = T[type]; w.placed++;
+      this.log(`🧱 Placed ${type} at (${x},${y})`, 'info'); this.emit({ type: 'build', x, y });
+      return this.wait('action');
+    }
+    if (n.command === 'spawnPortal') {
+      const [x1, y1, x2, y2] = [0, 1, 2, 3].map(i => this.num(P[i], 'Portal coordinate'));
+      for (const [x, y] of [[x1, y1], [x2, y2]]) {
+        if (!inBounds(x, y)) throw new GameError(`(${x},${y}) is outside the map`);
+        const t = w.tiles[y][x];
+        if (t === T.WATER || t === T.TRAP || WALLS.has(t)) throw new GameError(`A portal needs solid open ground - (${x},${y}) is not suitable.`);
+      }
+      if (x1 === x2 && y1 === y2) throw new GameError('The two portal ends must be different tiles');
+      this.countStep(); w.portals.push({ x1, y1, x2, y2 }); w.placed++;
+      this.log(`🌀 Portal (${x1},${y1}) ↔ (${x2},${y2})`, 'info'); this.emit({ type: 'build', x: x1, y: y1 }); this.emit({ type: 'build', x: x2, y: y2 });
+      return this.wait('action');
+    }
+    throw new GameError('Unknown world action');
+  }
+}
+
+// Run a program over every variant of a sub-stage. hooks.onWorld(world, v, n) lets the UI display each variant.
+async function simulate(level, ast, seed, hooks) {
+  hooks = hooks || {};
+  const n = level.mazeSeeds ? level.mazeSeeds.length : 1; let steps = 0;
+  for (let v = 0; v < n; v++) {
+    const w = buildWorld(level, seed, v);
+    if (hooks.onWorld) await hooks.onWorld(w, v, n);
+    const r = new Runner(level, w, ast, hooks);
+    if (hooks.setRunner) hooks.setRunner(r);
+    const res = await r.run(); steps += w.steps;
+    if (!res.ok) return Object.assign(res, { steps, world: w, variant: v });
+    const missing = evalObjectives(level, w, ast).filter(o => !o.done);
+    if (missing.length) return { ok: false, incomplete: true, error: 'Program finished, but objectives are incomplete: ' + missing.map(o => o.label).join(' · '), steps, world: w, variant: v };
+  }
+  return { ok: true, steps };
+}
+const solutionCache = {};
+function solutionAST(level) { return solutionCache[level.id] || (solutionCache[level.id] = parseDSL(level.solution)); }
+// @@ENGINE-END
+
+// ==========================================
+// 2. STORAGE & MAP NAVIGATION ENGINE
+// ==========================================
+const STORAGE_KEY = 'ctquest_v3_progress';
+let APP_STATE = {
+  currentView: 'WORLD_MAP',   // 'WORLD_MAP' | 'ISLAND_VIEW' | 'WORKBENCH'
+  currentIslandId: 1,
+  currentSubstageId: '1.1',
+  unlockedIslands: [1],       // Islands 1..12
+  completedSubstages: {},     // { '1.1': 3, '1.2': 2, ... } stars 1..3
+  totalStars: 0,
+  programs: {}                // saved workspace AST per sub-stage
+};
+const UI = { speed: 3, cat: 'action', time: 0, last: 0, world: null, disp: [], particles: [], hoverIsland: null, hoverNode: null,
+  ast: [], hintShown: false, wmT: null, ivT: null, gmT: null, bubbleUntil: 0, bubbleAgent: 0 };
+let memoryStore = null; // in-memory fallback when localStorage is unavailable
+
+function saveProgressToStorage() {
+  const data = JSON.stringify({ unlockedIslands: APP_STATE.unlockedIslands, completedSubstages: APP_STATE.completedSubstages, programs: APP_STATE.programs, speed: UI.speed });
+  memoryStore = data;
+  try { localStorage.setItem(STORAGE_KEY, data); } catch (e) { /* private mode: keep in memory */ }
+}
+function loadProgressFromStorage() {
+  let raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = memoryStore; }
+  if (raw) {
+    try {
+      const d = JSON.parse(raw);
+      if (Array.isArray(d.unlockedIslands)) APP_STATE.unlockedIslands = d.unlockedIslands.filter(n => Number.isInteger(n) && n >= 1 && n <= 12);
+      if (d.completedSubstages && typeof d.completedSubstages === 'object') {
+        APP_STATE.completedSubstages = {};
+        for (const k in d.completedSubstages) if (SUBSTAGE_DATA[k]) APP_STATE.completedSubstages[k] = Math.max(0, Math.min(3, d.completedSubstages[k] | 0));
+      }
+      if (d.programs && typeof d.programs === 'object') APP_STATE.programs = d.programs;
+      if (d.speed >= 1 && d.speed <= 5) UI.speed = d.speed;
+    } catch (e) { /* corrupted save: start fresh */ }
+  }
+  recomputeProgress();
+}
+function recomputeProgress() {
+  if (!APP_STATE.unlockedIslands.includes(1)) APP_STATE.unlockedIslands.unshift(1);
+  for (let i = 1; i < 12; i++) if (isIslandComplete(i) && !APP_STATE.unlockedIslands.includes(i + 1)) APP_STATE.unlockedIslands.push(i + 1);
+  APP_STATE.totalStars = Object.values(APP_STATE.completedSubstages).reduce((a, b) => a + b, 0);
+}
+const subStars = id => APP_STATE.completedSubstages[id] || 0;
+const islandStars = isl => [1, 2, 3].reduce((s, k) => s + subStars(isl + '.' + k), 0);
+const isIslandUnlocked = id => APP_STATE.unlockedIslands.includes(id);
+function isIslandComplete(id) { return [1, 2, 3].every(k => subStars(id + '.' + k) >= 1); }
+function isSubUnlocked(subId) {
+  const [i, s] = subId.split('.').map(Number);
+  return isIslandUnlocked(i) && (s === 1 || subStars(i + '.' + (s - 1)) >= 1);
+}
+const currentLevel = () => SUBSTAGE_DATA[APP_STATE.currentSubstageId];
+const $ = id => document.getElementById(id);
+
+function setActiveScreen(id) {
+  if (BRIEF.open) hideBriefing(false);
+  hideAbout();
+  ['screen-world-map', 'screen-island', 'screen-workbench'].forEach(s => $(s).classList.toggle('active', s === id));
+}
+function showWorldMap() {
+  stopProgram(); hideVictory();
+  APP_STATE.currentView = 'WORLD_MAP';
+  setActiveScreen('screen-world-map');
+  updateHeaders(); renderWorldMapCanvas();
+}
+function selectIsland(islandId) {
+  if (!APP_STATE.unlockedIslands.includes(islandId)) {
+    logToast("🔒 Island " + islandId + " is locked! Clear previous islands to unlock.");
+    return;
+  }
+  stopProgram(); hideVictory();
+  APP_STATE.currentIslandId = islandId;
+  APP_STATE.currentView = 'ISLAND_VIEW';
+  setActiveScreen('screen-island');
+  updateHeaders(); renderIslandCanvas(islandId);
+}
+function launchSubstage(subId) {
+  if (!SUBSTAGE_DATA[subId]) return;
+  if (!isSubUnlocked(subId)) {
+    const [i, s] = subId.split('.');
+    logToast(isIslandUnlocked(+i) ? `🔒 Sub-stage ${subId} is locked! Clear ${i}.${s - 1} first.` : `🔒 Island ${i} is locked!`);
+    return;
+  }
+  stopProgram(); hideVictory();
+  APP_STATE.currentSubstageId = subId;
+  APP_STATE.currentIslandId = SUBSTAGE_DATA[subId].island;
+  APP_STATE.currentView = 'WORKBENCH';
+  setActiveScreen('screen-workbench');
+  initSubstagePuzzle(subId);
+  updateHeaders();
+}
+function updateHeaders() {
+  const tot = `⭐ ${APP_STATE.totalStars}/${MAX_STARS}`;
+  $('wm-stars').textContent = tot;
+  const isl = WORLD_ISLANDS[APP_STATE.currentIslandId - 1];
+  $('island-title').textContent = `${isl.icon} Island ${isl.id}: ${isl.name}`;
+  $('island-stars').textContent = `Stars: ⭐ ${islandStars(isl.id)}/9`;
+  $('wb-score').textContent = `⭐ Score: ${APP_STATE.totalStars}/${MAX_STARS}`;
+  const L = currentLevel();
+  const bc = $('breadcrumbs'); bc.innerHTML = '';
+  const add = (txt, fn, cls) => { const e = document.createElement(fn ? 'a' : 'span'); e.textContent = txt; if (fn) e.addEventListener('click', fn); if (cls) e.className = cls; bc.appendChild(e); };
+  add('World Map', showWorldMap); add('>', null, 'sep');
+  add(`Island ${L.island}: ${WORLD_ISLANDS[L.island - 1].name}`, () => selectIsland(L.island)); add('>', null, 'sep');
+  add(`Sub-stage ${L.id}: ${L.title}`, null, 'cur');
+}
+
+// ==========================================
+// 3. CANVAS RENDERER (WORLD MAP & PUZZLE)
+// ==========================================
+function fitCanvas(cv) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return null;
+  const W = Math.round(w * dpr), H = Math.round(h * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { w, h, ctx };
+}
+function viewTransform(w, h, LW, LH, pad) {
+  const s = Math.max(0.05, Math.min((w - pad * 2) / LW, (h - pad * 2) / LH));
+  return { s, ox: (w - LW * s) / 2, oy: (h - LH * s) / 2 };
+}
+function toLogical(cv, vt, e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left - vt.ox) / vt.s, y: (e.clientY - r.top - vt.oy) / vt.s };
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+const SHAPES = {};
+function blobPoints(key, n, jitter) {
+  if (SHAPES[key]) return SHAPES[key];
+  const rng = mulberry32(key * 7919 + 13), raw = [];
+  for (let i = 0; i < n; i++) raw.push(1 - jitter / 2 + rng() * jitter);
+  const pts = raw.map((r, i) => { const rr = (raw[(i + n - 1) % n] + r * 2 + raw[(i + 1) % n]) / 4, a = i / n * Math.PI * 2; return [Math.cos(a) * rr, Math.sin(a) * rr]; });
+  return (SHAPES[key] = pts);
+}
+function blobPath(ctx, pts, cx, cy, rx, ry) {
+  const P = pts.map(([x, y]) => [cx + x * rx, cy + y * ry]), n = P.length;
+  ctx.beginPath();
+  ctx.moveTo((P[n - 1][0] + P[0][0]) / 2, (P[n - 1][1] + P[0][1]) / 2);
+  for (let i = 0; i < n; i++) { const p = P[i], q = P[(i + 1) % n]; ctx.quadraticCurveTo(p[0], p[1], (p[0] + q[0]) / 2, (p[1] + q[1]) / 2); }
+  ctx.closePath();
+}
+function drawOcean(ctx, w, h, t) {
+  const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#0b2a4a'); g.addColorStop(1, '#06182e');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  ctx.lineWidth = 1.5;
+  for (let y = 18, row = 0; y < h + 20; y += 30, row++) {
+    ctx.strokeStyle = `rgba(140,210,255,${0.05 + (row % 3) * 0.02})`; ctx.beginPath();
+    for (let x = -20; x <= w + 20; x += 14) {
+      const yy = y + Math.sin(x * 0.018 + t * 1.3 + row * 1.7) * 4 + Math.sin(x * 0.05 - t * 0.7) * 1.5;
+      x === -20 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy);
+    }
+    ctx.stroke();
+  }
+}
+function drawPalm(ctx, x, y, s, t) {
+  ctx.strokeStyle = '#7a5230'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 4 * s, y - 14 * s, x + 2 * s, y - 26 * s); ctx.stroke();
+  ctx.fillStyle = '#1f9d4c';
+  for (let k = 0; k < 5; k++) {
+    const a = k / 5 * Math.PI * 2 + Math.sin(t + x) * 0.08;
+    ctx.beginPath(); ctx.ellipse(x + 2 * s + Math.cos(a) * 9 * s, y - 26 * s + Math.sin(a) * 4 * s, 10 * s, 3.2 * s, a, 0, Math.PI * 2); ctx.fill();
+  }
+}
+function currentFrontierIsland() {
+  for (const isl of WORLD_ISLANDS) if (isIslandUnlocked(isl.id) && !isIslandComplete(isl.id)) return isl.id;
+  return 12;
+}
+
+// ---------- World Map Renderer ----------
+function drawWorldMap() {
+  const cv = $('world-map-canvas'), c = fitCanvas(cv); if (!c) return;
+  const { ctx, w, h } = c, t = UI.time;
+  drawOcean(ctx, w, h, t);
+  const vt = UI.wmT = viewTransform(w, h, 1000, 600, 12);
+  ctx.save(); ctx.translate(vt.ox, vt.oy); ctx.scale(vt.s, vt.s);
+  // title card
+  ctx.fillStyle = 'rgba(10,12,28,0.6)'; roundRect(ctx, 14, 14, 364, 62, 12); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '800 20px Segoe UI, system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('🌐 The Code Odyssey Archipelago', 28, 42);
+  ctx.fillStyle = '#9ab'; ctx.font = '600 13px Segoe UI, system-ui, sans-serif';
+  ctx.fillText(`Islands unlocked: ${APP_STATE.unlockedIslands.length}/12  ·  Click an island to explore`, 28, 63);
+  // compass
+  ctx.save(); ctx.translate(950, 548); ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.moveTo(0, -22); ctx.lineTo(6, 0); ctx.lineTo(0, 22); ctx.lineTo(-6, 0); ctx.fill();
+  ctx.font = '700 11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('N', 0, -30); ctx.restore();
+  // shipping routes
+  for (let i = 0; i < 11; i++) {
+    const a = WORLD_ISLANDS[i], b = WORLD_ISLANDS[i + 1], open = isIslandUnlocked(b.id);
+    const mx = (a.x + b.x) / 2 + (b.y - a.y) * 0.22, my = (a.y + b.y) / 2 - (b.x - a.x) * 0.22;
+    ctx.setLineDash([9, 9]); ctx.lineDashOffset = open ? -t * 22 : 0; ctx.lineWidth = open ? 4 : 3;
+    ctx.strokeStyle = open ? '#00ff88' : 'rgba(255,255,255,0.32)';
+    if (open) { ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 8; }
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(mx, my, b.x, b.y); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+  ctx.setLineDash([]);
+  // islands
+  const frontier = currentFrontierIsland();
+  for (const isl of WORLD_ISLANDS) {
+    const unlocked = isIslandUnlocked(isl.id), complete = isIslandComplete(isl.id), hover = UI.hoverIsland === isl.id;
+    const bob = Math.sin(t * 1.4 + isl.id) * 2, sc = hover ? 1.09 : 1, r = 46 * sc, cx = isl.x, cy = isl.y + bob;
+    const pts = blobPoints(isl.id, 16, 0.42);
+    ctx.fillStyle = 'rgba(0,0,0,0.28)'; blobPath(ctx, pts, cx + 4, cy + 8, r * 1.25, r * 0.95); ctx.fill();
+    ctx.fillStyle = 'rgba(90,200,255,0.22)'; blobPath(ctx, pts, cx, cy, r * 1.42, r * 1.1); ctx.fill();
+    ctx.fillStyle = unlocked ? '#ecd595' : '#7b7f8c'; blobPath(ctx, pts, cx, cy, r * 1.22, r * 0.94); ctx.fill();
+    const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, 4, cx, cy, r * 1.1);
+    if (unlocked) { g.addColorStop(0, '#5fd36f'); g.addColorStop(1, '#23803a'); } else { g.addColorStop(0, '#6b7280'); g.addColorStop(1, '#3f4552'); }
+    ctx.fillStyle = g; blobPath(ctx, pts, cx, cy, r * 1.05, r * 0.78); ctx.fill();
+    // rock & trees decoration
+    const rng = mulberry32(isl.id * 31);
+    for (let k = 0; k < 3; k++) {
+      const a = rng() * Math.PI * 2, d = 0.45 + rng() * 0.3, tx = cx + Math.cos(a) * r * d, ty = cy + Math.sin(a) * r * 0.6 * d;
+      ctx.fillStyle = unlocked ? '#166534' : '#4b5060'; ctx.beginPath(); ctx.arc(tx, ty, 6 * sc, 0, Math.PI * 2); ctx.fill();
+    }
+    if (hover || isl.id === frontier && unlocked) {
+      ctx.strokeStyle = isl.id === frontier ? `rgba(255,215,0,${0.5 + Math.sin(t * 4) * 0.3})` : 'rgba(0,212,255,0.8)';
+      ctx.lineWidth = 3; blobPath(ctx, pts, cx, cy, r * 1.32, r * 1.02); ctx.stroke();
+    }
+    ctx.globalAlpha = unlocked ? 1 : 0.45; ctx.font = `${Math.round(28 * sc)}px Segoe UI Emoji, Apple Color Emoji, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(isl.icon, cx, cy - 2); ctx.globalAlpha = 1;
+    // name banner
+    const label = `${isl.id}. ${isl.name}`; ctx.font = '700 13px Segoe UI, system-ui, sans-serif';
+    const lw = ctx.measureText(label).width + 18;
+    ctx.fillStyle = unlocked ? 'rgba(10,12,28,0.85)' : 'rgba(30,30,40,0.8)'; roundRect(ctx, cx - lw / 2, cy + r * 0.8, lw, 22, 11); ctx.fill();
+    ctx.strokeStyle = complete ? '#00ff88' : unlocked ? '#00d4ff88' : '#555'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = unlocked ? '#fff' : '#999'; ctx.fillText(label, cx, cy + r * 0.8 + 11.5);
+    // badge
+    if (unlocked) {
+      const txt = `⭐ ${islandStars(isl.id)}/9`; ctx.font = '800 12px Segoe UI, system-ui, sans-serif';
+      const bw = ctx.measureText(txt).width + 16, bx = cx + r * 0.55, by = cy - r * 0.95;
+      ctx.fillStyle = complete ? '#14532d' : '#1a1d3a'; roundRect(ctx, bx - bw / 2, by - 11, bw, 22, 11); ctx.fill();
+      ctx.strokeStyle = '#ffd700aa'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#ffd700'; ctx.fillText(txt, bx, by + 0.5);
+    } else {
+      ctx.fillStyle = '#1f2230'; ctx.beginPath(); ctx.arc(cx + r * 0.7, cy - r * 0.7, 15, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#888'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.font = '15px Segoe UI Emoji, Apple Color Emoji, sans-serif'; ctx.fillText('🔒', cx + r * 0.7, cy - r * 0.7 + 1);
+    }
+  }
+  // boat at the frontier island
+  const fi = WORLD_ISLANDS[frontier - 1];
+  ctx.font = '26px Segoe UI Emoji, Apple Color Emoji, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('⛵', fi.x - 64, fi.y + 26 + Math.sin(t * 2.2) * 3);
+  ctx.restore();
+}
+function renderWorldMapCanvas() { drawWorldMap(); }
+
+// ---------- Island Sub-stage Renderer ----------
+const NODE_POS = [{ x: 230, y: 410 }, { x: 500, y: 300 }, { x: 770, y: 410 }];
+function drawIslandView() {
+  const cv = $('island-canvas'), c = fitCanvas(cv); if (!c) return;
+  const { ctx, w, h } = c, t = UI.time, isl = WORLD_ISLANDS[APP_STATE.currentIslandId - 1];
+  drawOcean(ctx, w, h, t);
+  const vt = UI.ivT = viewTransform(w, h, 1000, 600, 10);
+  ctx.save(); ctx.translate(vt.ox, vt.oy); ctx.scale(vt.s, vt.s);
+  const pts = blobPoints(100 + isl.id, 26, 0.28);
+  ctx.fillStyle = 'rgba(90,200,255,0.2)'; blobPath(ctx, pts, 500, 345, 470, 265); ctx.fill();
+  ctx.fillStyle = '#ecd595'; blobPath(ctx, pts, 500, 345, 445, 245); ctx.fill();
+  const g = ctx.createRadialGradient(440, 280, 30, 500, 345, 440); g.addColorStop(0, '#5fd36f'); g.addColorStop(1, '#22803a');
+  ctx.fillStyle = g; blobPath(ctx, pts, 500, 345, 412, 218); ctx.fill();
+  ctx.globalAlpha = 0.12; ctx.font = '170px Segoe UI Emoji, Apple Color Emoji, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(isl.icon, 500, 350); ctx.globalAlpha = 1;
+  const rng = mulberry32(isl.id * 101);
+  for (let k = 0; k < 9; k++) {
+    const a = rng() * Math.PI * 2, d = 0.55 + rng() * 0.35, px = 500 + Math.cos(a) * 380 * d, py = 345 + Math.sin(a) * 195 * d;
+    if (NODE_POS.some(n => Math.hypot(n.x - px, n.y - py) < 90)) continue;
+    drawPalm(ctx, px, py, 1.1, t);
+  }
+  // header card
+  ctx.fillStyle = 'rgba(10,12,28,0.78)'; roundRect(ctx, 250, 18, 500, 74, 14); ctx.fill(); ctx.strokeStyle = '#00d4ff55'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = '800 21px Segoe UI, system-ui, sans-serif'; ctx.fillText(`${isl.icon} Island ${isl.id} - ${isl.name}`, 500, 44);
+  ctx.fillStyle = '#9fb3d1'; ctx.font = '600 13px Segoe UI, system-ui, sans-serif'; ctx.fillText(`${isl.concept}: ${isl.desc}`, 500, 72, 480);
+  // path between nodes
+  const segPath = (a, b) => { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo((a.x + b.x) / 2, Math.min(a.y, b.y) - 50 + (a.y > b.y ? 40 : -10), b.x, b.y); };
+  for (let k = 0; k < 2; k++) {
+    const a = NODE_POS[k], b = NODE_POS[k + 1], done = subStars(`${isl.id}.${k + 1}`) >= 1;
+    ctx.lineCap = 'round'; ctx.lineWidth = 20; ctx.strokeStyle = '#c9a46a'; segPath(a, b); ctx.stroke();
+    ctx.lineWidth = 4; ctx.setLineDash([10, 12]); ctx.lineDashOffset = done ? -t * 20 : 0; ctx.strokeStyle = done ? '#00ff88' : 'rgba(255,255,255,0.55)'; segPath(a, b); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // nodes
+  for (let k = 0; k < 3; k++) {
+    const id = `${isl.id}.${k + 1}`, L = SUBSTAGE_DATA[id], st = subStars(id), unlocked = isSubUnlocked(id), p = NODE_POS[k];
+    const state = st >= 1 ? 'done' : unlocked ? 'current' : 'locked', hover = UI.hoverNode === k;
+    const R = hover ? 40 : 36;
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(p.x + 3, p.y + R * 0.9, R * 0.9, 10, 0, 0, Math.PI * 2); ctx.fill();
+    if (state === 'current') { ctx.strokeStyle = `rgba(255,215,0,${0.35 + Math.sin(t * 4) * 0.25})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(p.x, p.y, R + 10 + Math.sin(t * 4) * 3, 0, Math.PI * 2); ctx.stroke(); }
+    const fill = state === 'done' ? ['#22c55e', '#15803d'] : state === 'current' ? ['#facc15', '#ca8a04'] : ['#6b7280', '#374151'];
+    const ng = ctx.createLinearGradient(p.x, p.y - R, p.x, p.y + R); ng.addColorStop(0, fill[0]); ng.addColorStop(1, fill[1]);
+    ctx.fillStyle = ng; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = hover ? '#fff' : 'rgba(255,255,255,0.65)'; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (state === 'locked') { ctx.font = '26px Segoe UI Emoji, Apple Color Emoji, sans-serif'; ctx.fillText('🔒', p.x, p.y + 1); }
+    else { ctx.font = '900 30px Segoe UI, system-ui, sans-serif'; ctx.fillStyle = state === 'done' ? '#fff' : '#3b2a00'; ctx.fillText(state === 'done' ? '✓' : '★', p.x, p.y + 1); }
+    ctx.fillStyle = 'rgba(10,12,28,0.85)'; roundRect(ctx, p.x - 26, p.y - R - 30, 52, 22, 11); ctx.fill();
+    ctx.fillStyle = '#00d4ff'; ctx.font = '800 13px Segoe UI, system-ui, sans-serif'; ctx.fillText(id, p.x, p.y - R - 19);
+    // caption
+    ctx.fillStyle = 'rgba(10,12,28,0.82)'; roundRect(ctx, p.x - 95, p.y + R + 12, 190, 66, 12); ctx.fill();
+    ctx.fillStyle = state === 'locked' ? '#999' : '#fff'; ctx.font = '800 15px Segoe UI, system-ui, sans-serif'; ctx.fillText(L.title, p.x, p.y + R + 30);
+    ctx.fillStyle = '#9ab'; ctx.font = '600 12px Segoe UI, system-ui, sans-serif'; ctx.fillText(`Sub-stage .${k + 1} · ${L.kind}`, p.x, p.y + R + 48);
+    if (state === 'locked') { ctx.fillStyle = '#aaa'; ctx.font = '700 13px Segoe UI, system-ui, sans-serif'; ctx.fillText('🔒 Locked', p.x, p.y + R + 66); }
+    else { ctx.font = '17px Segoe UI Emoji, Apple Color Emoji, sans-serif'; for (let s = 0; s < 3; s++) { ctx.globalAlpha = s < st ? 1 : 0.22; ctx.fillText('⭐', p.x - 22 + s * 22, p.y + R + 66); } ctx.globalAlpha = 1; }
+  }
+  ctx.restore();
+}
+function renderIslandCanvas(islandId) { drawIslandView(); }
+
+// ---------- Puzzle Workbench Renderer ----------
+const hash2 = (x, y) => { let h = x * 374761393 + y * 668265263; h = (h ^ (h >>> 13)) * 1274126177; return (h ^ (h >>> 16)) >>> 0; };
+const BARRIER_COLORS = { BLUE: '#3b82f6', RED: '#ef4444', GREEN: '#22c55e' };
+function drawGrass(ctx, px, py, h) {
+  ctx.fillStyle = h & 1 ? '#2f7d3a' : '#2c7536'; ctx.fillRect(px, py, TILE, TILE);
+  ctx.strokeStyle = 'rgba(20,70,30,0.55)'; ctx.lineWidth = 1.5;
+  for (let k = 0; k < 3; k++) { const bx = px + 6 + ((h >> (k * 4)) & 31), by = py + 10 + ((h >> (k * 5 + 2)) & 27); ctx.beginPath(); ctx.moveTo(bx, by + 5); ctx.lineTo(bx + 2, by); ctx.moveTo(bx + 3, by + 5); ctx.lineTo(bx + 5, by + 1); ctx.stroke(); }
+}
+function drawWater(ctx, px, py, x, y, t) {
+  ctx.fillStyle = '#1d4e89'; ctx.fillRect(px, py, TILE, TILE);
+  ctx.strokeStyle = 'rgba(160,220,255,0.25)'; ctx.lineWidth = 2;
+  for (let k = 0; k < 2; k++) {
+    const yy = py + 14 + k * 20; ctx.beginPath();
+    for (let i = 0; i <= TILE; i += 6) { const v = yy + Math.sin((px + i) * 0.15 + t * 2.4 + y + k) * 2.2; i ? ctx.lineTo(px + i, v) : ctx.moveTo(px, v); }
+    ctx.stroke();
+  }
+}
+function drawTile(ctx, w, x, y, t) {
+  const tt = w.tiles[y][x], px = x * TILE, py = y * TILE, h = hash2(x, y);
+  switch (tt) {
+    case T.GRASS: drawGrass(ctx, px, py, h); break;
+    case T.WATER: drawWater(ctx, px, py, x, y, t); break;
+    case T.STONE:
+      ctx.fillStyle = '#3f4552'; ctx.fillRect(px, py, TILE, TILE);
+      ctx.fillStyle = '#6b7280'; ctx.fillRect(px + 3, py + 3, TILE - 6, TILE - 6);
+      ctx.fillStyle = '#7d8593'; ctx.fillRect(px + 3, py + 3, TILE - 6, 6);
+      ctx.strokeStyle = '#4b5260'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px + 3, py + 25); ctx.lineTo(px + 45, py + 25); ctx.moveTo(px + 24, py + 3); ctx.lineTo(px + 24, py + 25); ctx.moveTo(px + 14, py + 25); ctx.lineTo(px + 14, py + 45); ctx.moveTo(px + 34, py + 25); ctx.lineTo(px + 34, py + 45); ctx.stroke();
+      break;
+    case T.TREE:
+      drawGrass(ctx, px, py, h);
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(px + 26, py + 40, 15, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#6b4423'; ctx.fillRect(px + 21, py + 26, 6, 14);
+      ctx.fillStyle = '#14532d'; ctx.beginPath(); ctx.arc(px + 24, py + 20, 16, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1f7a3d'; ctx.beginPath(); ctx.arc(px + 20, py + 16, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2f9e52'; ctx.beginPath(); ctx.arc(px + 18, py + 13, 4, 0, Math.PI * 2); ctx.fill();
+      break;
+    case T.HOUSE:
+      drawGrass(ctx, px, py, h);
+      ctx.fillStyle = '#e7d3b0'; ctx.fillRect(px + 8, py + 20, 32, 22);
+      ctx.fillStyle = '#b91c1c'; ctx.beginPath(); ctx.moveTo(px + 4, py + 22); ctx.lineTo(px + 24, py + 6); ctx.lineTo(px + 44, py + 22); ctx.fill();
+      ctx.fillStyle = '#6b4423'; ctx.fillRect(px + 20, py + 30, 8, 12);
+      break;
+    case T.PATH: case T.DOOR:
+      ctx.fillStyle = '#c8a165'; ctx.fillRect(px, py, TILE, TILE);
+      ctx.fillStyle = '#b48f58'; for (let k = 0; k < 4; k++) ctx.fillRect(px + ((h >> (k * 3)) & 39) + 3, py + ((h >> (k * 4 + 1)) & 39) + 3, 3, 3);
+      if (tt === T.DOOR) {
+        const open = w.openDoors.has(x + ',' + y);
+        ctx.fillStyle = '#3f2a14'; ctx.fillRect(px + 6, py + 2, 36, 44);
+        if (open) { ctx.fillStyle = '#1a1208'; ctx.fillRect(px + 10, py + 6, 28, 40); ctx.fillStyle = '#8b5a2b'; ctx.fillRect(px + 34, py + 6, 6, 40); }
+        else {
+          ctx.fillStyle = '#8b5a2b'; ctx.fillRect(px + 10, py + 6, 28, 40);
+          ctx.strokeStyle = '#5c3a1a'; ctx.lineWidth = 2; for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(px + 10 + k * 7, py + 6); ctx.lineTo(px + 10 + k * 7, py + 46); ctx.stroke(); }
+          ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(px + 24, py + 24, 5, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(px + 22, py + 26, 4, 7);
+        }
+      }
+      break;
+    case T.FLOWER:
+      drawGrass(ctx, px, py, h);
+      ['#f472b6', '#facc15', '#ffffff', '#a78bfa'].forEach((col, k) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px + 8 + ((h >> (k * 4)) & 31), py + 8 + ((h >> (k * 3 + 7)) & 31), 3, 0, Math.PI * 2); ctx.fill(); });
+      break;
+    case T.BRIDGE:
+      drawWater(ctx, px, py, x, y, t);
+      ctx.fillStyle = '#8b5a2b'; ctx.fillRect(px, py + 6, TILE, 36);
+      ctx.strokeStyle = '#5c3a1a'; ctx.lineWidth = 2; for (let k = 0; k <= 4; k++) { ctx.beginPath(); ctx.moveTo(px + k * 12, py + 6); ctx.lineTo(px + k * 12, py + 42); ctx.stroke(); }
+      ctx.fillStyle = '#a16207'; ctx.fillRect(px, py + 4, TILE, 4); ctx.fillRect(px, py + 40, TILE, 4);
+      break;
+    case T.TRAP:
+      ctx.fillStyle = '#3a3a44'; ctx.fillRect(px, py, TILE, TILE);
+      ctx.fillStyle = '#cbd5e1';
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) { const sx = px + 6 + i * 14, sy = py + 8 + j * 14; ctx.beginPath(); ctx.moveTo(sx, sy + 10); ctx.lineTo(sx + 5, sy); ctx.lineTo(sx + 10, sy + 10); ctx.fill(); }
+      break;
+  }
+}
+function drawGem(ctx, cx, cy, type, t, k) {
+  const col = type === 'GOLD' ? ['#fde047', '#ca8a04'] : type === 'SILVER' ? ['#f1f5f9', '#94a3b8'] : ['#67e8f9', '#0891b2'];
+  const yy = cy + Math.sin(t * 3 + k) * 2.5;
+  ctx.save(); ctx.shadowColor = col[0]; ctx.shadowBlur = 14;
+  ctx.fillStyle = col[1]; ctx.beginPath(); ctx.moveTo(cx, yy - 13); ctx.lineTo(cx + 11, yy - 2); ctx.lineTo(cx, yy + 13); ctx.lineTo(cx - 11, yy - 2); ctx.closePath(); ctx.fill();
+  ctx.shadowBlur = 0; ctx.fillStyle = col[0]; ctx.beginPath(); ctx.moveTo(cx, yy - 13); ctx.lineTo(cx + 11, yy - 2); ctx.lineTo(cx, yy + 2); ctx.lineTo(cx - 11, yy - 2); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.beginPath(); ctx.arc(cx - 3, yy - 5, 2, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function drawAgent(ctx, d, a, idx, multi, t, selected) {
+  const cx = d.x * TILE + 24, cy = d.y * TILE + 24;
+  const moving = Math.abs(d.x - a.x) + Math.abs(d.y - a.y) > 0.02, bob = moving ? Math.sin(t * 18) * 1.5 : Math.sin(t * 3) * 1;
+  ctx.save(); ctx.translate(cx, cy + bob);
+  ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 15 - bob, 13, 4, 0, 0, Math.PI * 2); ctx.fill();
+  if (a.speed === 'FAST') { ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2; ctx.save(); ctx.rotate(d.ang); for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(-18, k * 6); ctx.lineTo(-28 - Math.sin(t * 20 + k) * 4, k * 6); ctx.stroke(); } ctx.restore(); }
+  if (a.shieldColor && a.shieldColor !== 'NONE') { ctx.strokeStyle = BARRIER_COLORS[a.shieldColor]; ctx.lineWidth = 3; ctx.globalAlpha = 0.6 + Math.sin(t * 5) * 0.25; ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; }
+  const body = idx === 0 ? ['#67e8f9', '#0891b2'] : ['#e9d5ff', '#9333ea'];
+  const g = ctx.createRadialGradient(-4, -5, 2, 0, 0, 16); g.addColorStop(0, body[0]); g.addColorStop(1, body[1]);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = selected ? '#fff' : 'rgba(255,255,255,0.4)'; ctx.stroke();
+  ctx.rotate(d.ang);
+  ctx.fillStyle = '#0b1220'; roundRect(ctx, 2, -9, 11, 18, 5); ctx.fill();
+  ctx.fillStyle = '#00ff88'; ctx.beginPath(); ctx.arc(9, -4, 2.2, 0, Math.PI * 2); ctx.arc(9, 4, 2.2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(22, 0); ctx.lineTo(16, -5); ctx.lineTo(16, 5); ctx.fill();
+  ctx.restore();
+  if (multi) { ctx.fillStyle = '#0b1220'; ctx.beginPath(); ctx.arc(cx - 13, cy - 13, 8, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '800 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(a.id), cx - 13, cy - 12.5); }
+}
+function drawPuzzleMap(dt) {
+  const cv = $('gameCanvas'), c = fitCanvas(cv); if (!c || !UI.world) return;
+  const { ctx, w: W, h: H } = c, t = UI.time, w = UI.world;
+  ctx.fillStyle = '#070814'; ctx.fillRect(0, 0, W, H);
+  // Fit the 16x12 grid beside or below the objective box when there is room, otherwise underneath it
+  const LW = COLS * TILE, LH = ROWS * TILE, box = $('objective-box');
+  const bh = box.offsetTop + box.offsetHeight + 6, bw = box.offsetLeft + box.offsetWidth + 6;
+  const full = viewTransform(W, H, LW, LH, 8), below = viewTransform(W, H - bh, LW, LH, 8), right = viewTransform(W - bw, H, LW, LH, 8);
+  below.oy += bh; right.ox += bw;
+  const best = below.s >= right.s ? below : right;
+  const vt = UI.gmT = best.s >= full.s * 0.72 ? best : full;
+  ctx.save(); ctx.translate(vt.ox, vt.oy); ctx.scale(vt.s, vt.s);
+  ctx.beginPath(); ctx.rect(0, 0, COLS * TILE, ROWS * TILE); ctx.clip();
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) drawTile(ctx, w, x, y, t);
+  ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1;
+  for (let x = 1; x < COLS; x++) { ctx.beginPath(); ctx.moveTo(x * TILE, 0); ctx.lineTo(x * TILE, ROWS * TILE); ctx.stroke(); }
+  for (let y = 1; y < ROWS; y++) { ctx.beginPath(); ctx.moveTo(0, y * TILE); ctx.lineTo(COLS * TILE, y * TILE); ctx.stroke(); }
+  // portals
+  w.portals.forEach(p => {
+    ctx.setLineDash([4, 8]); ctx.strokeStyle = 'rgba(192,132,252,0.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p.x1 * TILE + 24, p.y1 * TILE + 24); ctx.lineTo(p.x2 * TILE + 24, p.y2 * TILE + 24); ctx.stroke(); ctx.setLineDash([]);
+    [[p.x1, p.y1], [p.x2, p.y2]].forEach(([x, y]) => {
+      const cx = x * TILE + 24, cy = y * TILE + 24;
+      for (let k = 0; k < 3; k++) { ctx.strokeStyle = ['#a855f7', '#c084fc', '#f0abfc'][k]; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(cx, cy, 18 - k * 5, 12 - k * 3, t * (2 + k), 0, Math.PI * 1.6); ctx.stroke(); }
+    });
+  });
+  w.exits.forEach(e => {
+    const px = e.x * TILE, py = e.y * TILE;
+    ctx.fillStyle = 'rgba(0,255,136,0.18)'; ctx.beginPath(); ctx.arc(px + 24, py + 38, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e5e7eb'; ctx.fillRect(px + 15, py + 8, 3, 34);
+    ctx.fillStyle = '#00e676'; ctx.beginPath(); ctx.moveTo(px + 18, py + 9);
+    for (let i = 0; i <= 18; i += 3) ctx.lineTo(px + 18 + i, py + 9 + Math.sin(t * 6 + i * 0.3) * 2);
+    for (let i = 18; i >= 0; i -= 3) ctx.lineTo(px + 18 + i, py + 23 + Math.sin(t * 6 + i * 0.3) * 2);
+    ctx.fill();
+  });
+  w.switches.forEach(s => {
+    const cx = s.x * TILE + 24, cy = s.y * TILE + 24;
+    ctx.fillStyle = '#1f2937'; ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = s.on ? '#00ff88' : '#ef4444'; if (s.on) { ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 12; }
+    ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+  });
+  w.barriers.forEach(b => {
+    const px = b.x * TILE, py = b.y * TILE, col = BARRIER_COLORS[b.color];
+    ctx.globalAlpha = 0.55 + Math.sin(t * 3 + b.x) * 0.12; ctx.fillStyle = col; ctx.fillRect(px + 4, py + 2, 40, 44); ctx.globalAlpha = 1;
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(px + 4, py + 10 + k * 11); ctx.lineTo(px + 44, py + 4 + k * 11); ctx.stroke(); }
+    ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.strokeRect(px + 4, py + 2, 40, 44);
+  });
+  w.beacons.forEach(b => {
+    const px = b.x * TILE, py = b.y * TILE;
+    ctx.fillStyle = '#334155'; ctx.fillRect(px + 16, py + 12, 16, 30); ctx.fillStyle = '#475569'; ctx.fillRect(px + 12, py + 38, 24, 6);
+    ctx.fillStyle = b.active ? '#00ffd5' : '#94a3b8'; if (b.active) { ctx.shadowColor = '#00ffd5'; ctx.shadowBlur = 18; }
+    ctx.beginPath(); ctx.arc(px + 24, py + 12, 8, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    if (b.active) { const order = w.beaconOrder.indexOf(b) + 1; ctx.fillStyle = '#062'; ctx.font = '800 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(order, px + 24, py + 12.5); }
+  });
+  w.keys.forEach((k, i) => {
+    if (k.taken) return; const cx = k.x * TILE + 24, cy = k.y * TILE + 24 + Math.sin(t * 3 + i) * 2;
+    ctx.save(); ctx.shadowColor = '#facc15'; ctx.shadowBlur = 10; ctx.strokeStyle = '#facc15'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(cx - 7, cy, 6, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx - 1, cy); ctx.lineTo(cx + 13, cy); ctx.moveTo(cx + 9, cy); ctx.lineTo(cx + 9, cy + 6); ctx.moveTo(cx + 13, cy); ctx.lineTo(cx + 13, cy + 5); ctx.stroke(); ctx.restore();
+  });
+  w.gems.forEach((g, i) => { if (!g.taken) drawGem(ctx, g.x * TILE + 24, g.y * TILE + 24, g.type, t, i); });
+  w.guards.forEach(g => {
+    if (!g.alive) return; const cx = g.x * TILE + 24, cy = g.y * TILE + 26 + Math.sin(t * 4 + g.x) * 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(cx, cy + 15, 13, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = g.armored ? '#6b7280' : '#dc2626'; ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = g.armored ? '#374151' : '#7f1d1d'; ctx.beginPath(); ctx.arc(cx, cy - 4, 15, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = '#fde68a'; ctx.fillRect(cx - 8, cy - 3, 16, 4);
+    ctx.fillStyle = '#111'; ctx.fillRect(cx - 6, cy - 2, 3, 2); ctx.fillRect(cx + 3, cy - 2, 3, 2);
+    if (g.armored) { ctx.fillStyle = '#ef4444'; ctx.fillRect(cx - 2, cy - 24, 4, 8); }
+    ctx.fillStyle = '#fff'; ctx.font = '700 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(g.needs, cx, cy + 9);
+  });
+  // agents (eased display positions)
+  const rate = 4 + UI.speed * 3.2, k = 1 - Math.exp(-dt * rate);
+  w.agents.forEach((a, i) => {
+    let d = UI.disp[i];
+    if (!d || d.tp !== a.tp) d = UI.disp[i] = { x: a.x, y: a.y, ang: a.dir * Math.PI / 2, tp: a.tp };
+    d.x += (a.x - d.x) * k; d.y += (a.y - d.y) * k;
+    let diff = a.dir * Math.PI / 2 - d.ang; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); d.ang += diff * Math.min(1, k * 1.4);
+    drawAgent(ctx, d, a, i, w.agents.length > 1, t, w.agents.length > 1 && w.sel.includes(i));
+  });
+  // particles
+  UI.particles = UI.particles.filter(p => (p.life -= dt) > 0);
+  UI.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 140 * dt; ctx.globalAlpha = Math.min(1, p.life * 2); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); });
+  ctx.globalAlpha = 1;
+  // coordinate rulers
+  const strong = currentLevel().island >= 11;
+  ctx.font = '700 10px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let x = 0; x < COLS; x++) { ctx.fillStyle = strong ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.3)'; ctx.fillRect(x * TILE + 17, 1, 14, 12); ctx.fillStyle = strong ? '#fff' : 'rgba(255,255,255,0.55)'; ctx.fillText(x, x * TILE + 24, 7.5); }
+  for (let y = 1; y < ROWS; y++) { ctx.fillStyle = strong ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.3)'; ctx.fillRect(1, y * TILE + 18, 14, 12); ctx.fillStyle = strong ? '#fff' : 'rgba(255,255,255,0.55)'; ctx.fillText(y, 8, y * TILE + 24.5); }
+  ctx.restore();
+  // speech bubble follows the agent
+  const sb = $('speech-bubble');
+  if (performance.now() < UI.bubbleUntil) {
+    const d = UI.disp[UI.bubbleAgent] || UI.disp[0];
+    if (d) { sb.style.display = 'block'; sb.style.left = (vt.ox + (d.x * TILE + 24) * vt.s) + 'px'; sb.style.top = (vt.oy + (d.y * TILE - 2) * vt.s) + 'px'; }
+  } else sb.style.display = 'none';
+}
+function spawnParticles(x, y, color, n) {
+  for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, s = 40 + Math.random() * 110; UI.particles.push({ x: x * TILE + 24, y: y * TILE + 24, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 80, r: 2 + Math.random() * 3, c: color, life: 0.6 + Math.random() * 0.5 }); }
+}
+function showSpeech(text, agentIdx) { const sb = $('speech-bubble'); sb.textContent = text; UI.bubbleAgent = agentIdx || 0; UI.bubbleUntil = performance.now() + 1800; }
+function setWorld(w, snap) {
+  UI.world = w;
+  // Seed display positions from the start tiles now, so the first step of a run is eased rather than snapped
+  if (snap) UI.disp = w.agents.map(a => ({ x: a.x, y: a.y, ang: a.dir * Math.PI / 2, tp: a.tp }));
+  refreshObjectives();
+}
+
+// ==========================================
+// 4. DRAG & DROP BLOCK AST ENGINE
+// ==========================================
+const CATEGORIES = [
+  { k: 'action', label: '⚡ Action' }, { k: 'control', label: '🔁 Control' }, { k: 'variable', label: '📝 Variable' },
+  { k: 'sensor', label: '📡 Sensor' }, { k: 'world', label: '🏗 World' }
+];
+const BLOCK_DEFS = {
+  move:        { cat: 'action', icon: '🦶', parts: ['Move Forward (', { f: 'n', d: '1' }, ')'] },
+  turnLeft:    { cat: 'action', icon: '↰', parts: ['Turn Left'] },
+  turnRight:   { cat: 'action', icon: '↱', parts: ['Turn Right'] },
+  collectGem:  { cat: 'action', icon: '💎', parts: ['Collect Gem'] },
+  collectKey:  { cat: 'action', icon: '🔑', parts: ['Collect Key'] },
+  collectItem: { cat: 'action', icon: '🎒', parts: ['Collect Item'] },
+  toggleSwitch:{ cat: 'action', icon: '🔘', parts: ['Activate Switch'] },
+  attack:      { cat: 'action', icon: '⚔️', parts: ['Attack'] },
+  attackWith:  { cat: 'action', icon: '⚔️', parts: ['Attack with', { f: 'weapon', d: 'SWORD' }] },
+  goTo:        { cat: 'action', icon: '📍', parts: ['Go To (', { f: 'target', d: 't' }, ')'] },
+  agentSelect: { cat: 'action', icon: '🤖', parts: ['Control agent', { f: 'agent', sel: ['1', '2', 'both'], d: '1' }] },
+  repeat:      { cat: 'control', icon: '🔁', parts: ['Repeat', { f: 'n', d: '4' }, 'times'], slots: ['body'] },
+  while:       { cat: 'control', icon: '♾️', parts: ['While', { cond: 'cond' }], slots: ['body'] },
+  if:          { cat: 'control', icon: '🔀', parts: ['If', { cond: 'cond' }], slots: ['body'] },
+  ifElse:      { cat: 'control', icon: '🔀', parts: ['If', { cond: 'cond' }], slots: ['body', 'else'] },
+  defFunc:     { cat: 'control', icon: '📦', parts: ['Define', { f: 'name', d: 'myFunc' }, '(', { f: 'params', d: '' }, ')'], slots: ['body'] },
+  callFunc:    { cat: 'control', icon: '📞', parts: ['Call', { f: 'name', d: 'myFunc' }, '(', { f: 'args', d: '' }, ')'] },
+  forEach:     { cat: 'control', icon: '📊', parts: ['For each', { f: 'name', d: 't' }, 'in', { f: 'list', d: 'targets' }], slots: ['body'] },
+  setVar:      { cat: 'variable', icon: '📝', parts: ['Set', { f: 'name', d: 'x' }, '=', { f: 'value', d: '0' }] },
+  changeVar:   { cat: 'variable', icon: '➕', parts: ['Change', { f: 'name', d: 'x' }, 'by', { f: 'value', d: '1' }] },
+  setProp:     { cat: 'variable', icon: '🎨', parts: ['Set agent.', { f: 'prop', sel: ['speed', 'shieldColor'], d: 'speed' }, '=', { f: 'value', d: 'FAST' }] },
+  sortList:    { cat: 'variable', icon: '↕️', parts: ['Sort', { f: 'list', d: 'waypoints' }, 'by distance'] },
+  placeBlock:  { cat: 'world', icon: '🧱', parts: ['Place', { f: 'tile', sel: ['BRIDGE', 'STONE', 'PATH'], d: 'BRIDGE' }, 'at x', { f: 'x', d: '0' }, 'y', { f: 'y', d: '0' }] },
+  spawnPortal: { cat: 'world', icon: '🌀', parts: ['Portal (', { f: 'x1', d: '0' }, ',', { f: 'y1', d: '0' }, ') ↔ (', { f: 'x2', d: '0' }, ',', { f: 'y2', d: '0' }, ')'] },
+  sensor:      { cat: 'sensor', chip: true, parts: [{ f: 'name', sel: 'SENSORS', d: 'isPathClear' }] },
+  not:         { cat: 'sensor', chip: true, logic: true, parts: ['NOT', { cond: 'a' }] },
+  and:         { cat: 'sensor', chip: true, logic: true, parts: [{ cond: 'a' }, 'AND', { cond: 'b' }] },
+  or:          { cat: 'sensor', chip: true, logic: true, parts: [{ cond: 'a' }, 'OR', { cond: 'b' }] },
+  cmp:         { cat: 'sensor', chip: true, parts: [{ f: 'left', d: 'x' }, { f: 'op', sel: ['==', '!=', '>', '<', '>=', '<='], d: '==' }, { f: 'right', d: '0' }] }
+};
+function parsePaletteEntry(s) {
+  const [key, ...rest] = s.split('|'), preset = {};
+  rest.forEach(kv => { const i = kv.indexOf('='); preset[kv.slice(0, i)] = kv.slice(i + 1); });
+  return { key, preset };
+}
+function levelSensors() {
+  const L = currentLevel(), s = (L.palette || []).map(parsePaletteEntry).filter(e => e.key === 'sensor').map(e => e.preset.name);
+  return s.length ? s : Object.keys(SENSORS);
+}
+function sizeInput(inp) { inp.style.width = Math.max(2.4, inp.value.length + 1.2) + 'ch'; }
+function createBlockEl(key, preset) {
+  preset = preset || {};
+  const def = BLOCK_DEFS[key]; if (!def) throw new Error('Unknown block ' + key);
+  const el = document.createElement('div');
+  el.className = `v-block blk cat-${def.cat}` + (def.slots ? ' c-block' : '') + (def.chip ? ' chip' : '') + (def.logic ? ' logic' : '');
+  el.dataset.key = key;
+  const row = document.createElement('div'); row.className = 'blk-row';
+  if (def.icon) { const ic = document.createElement('span'); ic.className = 'blk-icon'; ic.textContent = def.icon; row.appendChild(ic); }
+  def.parts.forEach(p => {
+    if (typeof p === 'string') { const s = document.createElement('span'); s.textContent = p; row.appendChild(s); }
+    else if (p.cond) { const sk = document.createElement('div'); sk.className = 'cond-socket'; sk.dataset.sock = p.cond; row.appendChild(sk); }
+    else if (p.sel) {
+      const s = document.createElement('select'); s.className = 'blk-in'; s.dataset.f = p.f;
+      let opts = p.sel === 'SENSORS' ? levelSensors() : p.sel.slice();
+      const v = preset[p.f] != null ? preset[p.f] : (p.d != null && opts.includes(p.d) ? p.d : opts[0]);
+      if (!opts.includes(v)) opts = opts.concat([v]);
+      opts.forEach(o => s.add(new Option(o, o))); s.value = v;
+      if (p.sel === 'SENSORS') s.title = SENSORS[v] || '';
+      row.appendChild(s);
+    } else {
+      const inp = document.createElement('input'); inp.className = 'blk-in'; inp.dataset.f = p.f; inp.type = 'text';
+      inp.value = preset[p.f] != null ? preset[p.f] : (p.d || ''); inp.autocomplete = 'off'; inp.spellcheck = false;
+      inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('autocorrect', 'off'); sizeInput(inp); row.appendChild(inp);
+    }
+  });
+  el.appendChild(row);
+  (def.slots || []).forEach((s, i) => {
+    if (i > 0) { const lab = document.createElement('div'); lab.className = 'c-label'; lab.textContent = 'Else'; el.appendChild(lab); }
+    const slot = document.createElement('div'); slot.className = 'block-slot'; slot.dataset.slot = s; slot.dataset.hint = s === 'else' ? 'otherwise do…' : 'drop blocks here'; el.appendChild(slot);
+  });
+  if (def.chip && key === 'sensor') el.title = SENSORS[preset.name] || '';
+  return el;
+}
+const slotOf = (el, name) => el.querySelector(`:scope > .block-slot[data-slot="${name}"]`);
+const sockOf = (el, name) => el.querySelector(`:scope > .blk-row > .cond-socket[data-sock="${name}"]`);
+function fieldVals(el) { const o = {}; el.querySelectorAll(':scope > .blk-row > [data-f]').forEach(i => { o[i.dataset.f] = i.value.trim(); }); return o; }
+let blockSeq = 0;
+function readSlot(slot) { return slot ? [...slot.children].filter(c => c.classList.contains('blk')).map(elToNode) : []; }
+function readSock(el, name) { const s = sockOf(el, name), chip = s && [...s.children].find(c => c.classList.contains('blk')); return chip ? elToCond(chip) : null; }
+function elToCond(el) {
+  const f = fieldVals(el);
+  switch (el.dataset.key) {
+    case 'sensor': return { type: 'SENSOR', name: f.name };
+    case 'not': return { type: 'NOT', a: readSock(el, 'a') };
+    case 'and': return { type: 'AND', a: readSock(el, 'a'), b: readSock(el, 'b') };
+    case 'or': return { type: 'OR', a: readSock(el, 'a'), b: readSock(el, 'b') };
+    case 'cmp': return { type: 'CMP', left: f.left, op: f.op, right: f.right };
+  }
+  return null;
+}
+function elToNode(el) {
+  const key = el.dataset.key, f = fieldVals(el), id = 'b' + (++blockSeq);
+  el.dataset.nid = id;
+  const kids = () => readSlot(slotOf(el, 'body'));
+  const split = s => (s || '').split(',').map(x => x.trim()).filter(Boolean);
+  switch (key) {
+    case 'move': return { id, type: 'ACTION', command: 'moveForward', params: [f.n] };
+    case 'turnLeft': case 'turnRight': case 'collectGem': case 'collectKey': case 'collectItem': case 'toggleSwitch': case 'attack':
+      return { id, type: 'ACTION', command: key, params: [] };
+    case 'attackWith': return { id, type: 'ACTION', command: 'attack', params: [f.weapon] };
+    case 'goTo': return { id, type: 'ACTION', command: 'goTo', params: [f.target] };
+    case 'agentSelect': return { id, type: 'AGENT', name: f.agent };
+    case 'repeat': return { id, type: 'REPEAT', params: [f.n], children: kids() };
+    case 'while': return { id, type: 'WHILE', condition: readSock(el, 'cond'), children: kids() };
+    case 'if': return { id, type: 'IF', condition: readSock(el, 'cond'), children: kids() };
+    case 'ifElse': return { id, type: 'IF', condition: readSock(el, 'cond'), children: kids(), elseChildren: readSlot(slotOf(el, 'else')) };
+    case 'defFunc': return { id, type: 'FUNC_DEF', name: f.name, paramNames: split(f.params), children: kids() };
+    case 'callFunc': return { id, type: 'CALL', name: f.name, args: split(f.args) };
+    case 'forEach': return { id, type: 'FOREACH', name: f.name, list: f.list, children: kids() };
+    case 'setVar': return { id, type: 'VAR_SET', name: f.name, params: [f.value] };
+    case 'changeVar': return { id, type: 'VAR_CHANGE', name: f.name, params: [f.value] };
+    case 'setProp': return { id, type: 'PROP_SET', name: f.prop, params: [f.value] };
+    case 'sortList': return { id, type: 'SORT', list: f.list };
+    case 'placeBlock': return { id, type: 'WORLD', command: 'placeBlock', params: [f.tile, f.x, f.y] };
+    case 'spawnPortal': return { id, type: 'WORLD', command: 'spawnPortal', params: [f.x1, f.y1, f.x2, f.y2] };
+  }
+  return { id, type: 'NOOP' };
+}
+function condToEl(c) {
+  if (!c) return null; let el;
+  switch (c.type) {
+    case 'SENSOR': el = createBlockEl('sensor', { name: c.name }); break;
+    case 'NOT': el = createBlockEl('not'); break;
+    case 'AND': el = createBlockEl('and'); break;
+    case 'OR': el = createBlockEl('or'); break;
+    case 'CMP': el = createBlockEl('cmp', { left: c.left, op: c.op, right: c.right }); break;
+    default: return null;
+  }
+  ['a', 'b'].forEach(k => { if (c[k]) { const ch = condToEl(c[k]); if (ch) sockOf(el, k).appendChild(ch); } });
+  return el;
+}
+function nodeToEl(n) {
+  let el; const P = n.params || [];
+  switch (n.type) {
+    case 'ACTION':
+      if (n.command === 'moveForward') el = createBlockEl('move', { n: P[0] != null ? P[0] : '1' });
+      else if (n.command === 'attack' && P.length) el = createBlockEl('attackWith', { weapon: P[0] });
+      else if (n.command === 'goTo') el = createBlockEl('goTo', { target: P[0] });
+      else el = createBlockEl(n.command);
+      break;
+    case 'REPEAT': el = createBlockEl('repeat', { n: P[0] }); break;
+    case 'WHILE': el = createBlockEl('while'); break;
+    case 'IF': el = createBlockEl(n.elseChildren ? 'ifElse' : 'if'); break;
+    case 'FUNC_DEF': el = createBlockEl('defFunc', { name: n.name, params: (n.paramNames || []).join(', ') }); break;
+    case 'CALL': el = createBlockEl('callFunc', { name: n.name, args: (n.args || []).join(', ') }); break;
+    case 'FOREACH': el = createBlockEl('forEach', { name: n.name, list: n.list }); break;
+    case 'VAR_SET': el = createBlockEl('setVar', { name: n.name, value: P[0] }); break;
+    case 'VAR_CHANGE': el = createBlockEl('changeVar', { name: n.name, value: P[0] }); break;
+    case 'PROP_SET': el = createBlockEl('setProp', { prop: n.name, value: P[0] }); break;
+    case 'AGENT': el = createBlockEl('agentSelect', { agent: n.name }); break;
+    case 'SORT': el = createBlockEl('sortList', { list: n.list }); break;
+    case 'WORLD':
+      el = n.command === 'placeBlock' ? createBlockEl('placeBlock', { tile: P[0], x: P[1], y: P[2] }) : createBlockEl('spawnPortal', { x1: P[0], y1: P[1], x2: P[2], y2: P[3] });
+      break;
+    default: return null;
+  }
+  if (n.condition) { const c = condToEl(n.condition), s = sockOf(el, 'cond'); if (c && s) s.appendChild(c); }
+  const fill = (name, list) => { const s = slotOf(el, name); if (s) (list || []).forEach(ch => { const e = nodeToEl(ch); if (e) s.appendChild(e); }); };
+  fill('body', n.children); fill('else', n.elseChildren);
+  return el;
+}
+function readWorkspaceAST() { return readSlot($('program-root')); }
+function loadProgram(ast) {
+  const root = $('program-root'); root.innerHTML = '';
+  (ast || []).forEach(n => { try { const e = nodeToEl(n); if (e) root.appendChild(e); } catch (err) { /* skip broken saved block */ } });
+  onProgramChanged();
+}
+function onProgramChanged() {
+  if (RUN.running) return;
+  UI.ast = readWorkspaceAST();
+  APP_STATE.programs[APP_STATE.currentSubstageId] = UI.ast;
+  saveProgressToStorage();
+  const n = countBlocks(UI.ast); $('block-count').textContent = n + (n === 1 ? ' block' : ' blocks');
+  refreshObjectives();
+}
+function highlightBlock(id) {
+  document.querySelectorAll('.exec-glowing').forEach(e => e.classList.remove('exec-glowing'));
+  if (!id) return;
+  const el = document.querySelector(`[data-nid="${id}"]`);
+  if (el) { el.classList.add('exec-glowing'); const ws = $('workspace-area'), r = el.getBoundingClientRect(), wr = ws.getBoundingClientRect(); if (r.top < wr.top || r.bottom > wr.bottom) el.scrollIntoView({ block: 'nearest' }); }
+}
+
+// ----- Palette & tabs -----
+function paletteEntries() { return (currentLevel().palette || []).map(parsePaletteEntry).filter(e => BLOCK_DEFS[e.key]); }
+function renderTabs() {
+  const tabs = $('category-tabs'); tabs.innerHTML = '';
+  const entries = paletteEntries();
+  CATEGORIES.forEach(c => {
+    const n = entries.filter(e => BLOCK_DEFS[e.key].cat === c.k).length;
+    const tab = document.createElement('div'); tab.className = 'cat-tab' + (UI.cat === c.k ? ' active' : '') + (n ? '' : ' empty');
+    tab.dataset.cat = c.k; tab.innerHTML = `${c.label}<span class="cnt">${n}</span>`;
+    tab.addEventListener('click', () => { UI.cat = c.k; renderTabs(); renderPalette(); });
+    tabs.appendChild(tab);
+  });
+}
+function renderPalette() {
+  const pal = $('block-palette'); pal.innerHTML = '';
+  const list = paletteEntries().filter(e => BLOCK_DEFS[e.key].cat === UI.cat);
+  if (!list.length) { const d = document.createElement('div'); d.className = 'palette-empty'; d.textContent = `No ${UI.cat} blocks are needed in this sub-stage.`; pal.appendChild(d); return; }
+  list.forEach(e => { const el = createBlockEl(e.key, e.preset); el.dataset.preset = JSON.stringify(e.preset); pal.appendChild(el); });
+}
+
+// ----- Touch & mouse drag-and-drop -----
+const DD = { p: null, marker: null };
+function ddClearTargets() {
+  document.querySelectorAll('.drag-over').forEach(e => e.classList.remove('drag-over'));
+  if (DD.marker && DD.marker.parentNode) DD.marker.parentNode.removeChild(DD.marker);
+  $('block-palette').classList.remove('hot');
+}
+function ddStart(target, x, y, pid) {
+  if (!(target instanceof Element) || target.closest('input, select, button, textarea')) return false;
+  const blk = target.closest('.blk'); if (!blk) return false;
+  const inPalette = !!blk.closest('#block-palette'), inWs = !!blk.closest('#workspace-area');
+  if (!inPalette && !inWs) return false;
+  if (RUN.running) { logToast('⏳ Stop the program (↺ Reset) before editing blocks.'); return false; }
+  DD.p = { src: blk, inPalette, x0: x, y0: y, started: false, pid };
+  return true;
+}
+function ddBegin(x, y) {
+  const p = DD.p, src = p.src, r = src.getBoundingClientRect();
+  const el = p.inPalette ? createBlockEl(src.dataset.key, JSON.parse(src.dataset.preset || '{}')) : src;
+  p.offX = Math.min(p.x0 - r.left, 60); p.offY = Math.min(p.y0 - r.top, 20);
+  if (!p.inPalette) el.style.width = r.width + 'px';
+  el.classList.add('dragging'); document.body.appendChild(el);
+  p.el = el; p.isChip = el.classList.contains('chip'); p.started = true;
+  $('block-palette').classList.add('trash-mode'); document.body.classList.add('is-dragging');
+  if (!DD.marker) { DD.marker = document.createElement('div'); DD.marker.className = 'drop-marker'; }
+}
+function ddMove(x, y) {
+  const p = DD.p; if (!p) return;
+  if (!p.started) { if (Math.hypot(x - p.x0, y - p.y0) < 6) return; ddBegin(x, y); }
+  p.el.style.left = (x - p.offX) + 'px'; p.el.style.top = (y - p.offY) + 'px';
+  ddClearTargets(); p.target = null;
+  const under = document.elementFromPoint(x, y); if (!under) return;
+  if (under.closest('#block-palette')) { $('block-palette').classList.add('hot'); p.target = { trash: true }; return; }
+  const ws = under.closest('#workspace-area');
+  if (ws) {
+    const wr = ws.getBoundingClientRect();
+    if (y < wr.top + 30) ws.scrollTop -= 10; else if (y > wr.bottom - 30) ws.scrollTop += 10;
+  }
+  if (!ws) return;
+  if (p.isChip) {
+    const sock = under.closest('.cond-socket');
+    if (sock && ws.contains(sock)) { sock.classList.add('drag-over'); p.target = { sock }; }
+    return;
+  }
+  let slot = under.closest('.block-slot'); if (!slot || !ws.contains(slot)) slot = $('program-root');
+  const kids = [...slot.children].filter(c => c.classList.contains('blk'));
+  let before = null;
+  for (const k of kids) { const r = k.getBoundingClientRect(); if (y < r.top + r.height / 2) { before = k; break; } }
+  slot.classList.add('drag-over'); slot.insertBefore(DD.marker, before);
+  p.target = { slot, before };
+}
+function ddEnd() {
+  const p = DD.p; DD.p = null; if (!p) return;
+  if (!p.started) { if (p.inPalette) tapAdd(p.src); return; }
+  ddClearTargets();
+  $('block-palette').classList.remove('trash-mode'); document.body.classList.remove('is-dragging');
+  const el = p.el; el.classList.remove('dragging'); el.style.left = el.style.top = el.style.width = '';
+  const tg = p.target;
+  if (tg && tg.slot) tg.slot.insertBefore(el, tg.before && tg.before.parentNode === tg.slot ? tg.before : null);
+  else if (tg && tg.sock) { [...tg.sock.children].forEach(c => c.remove()); tg.sock.appendChild(el); }
+  else { el.remove(); if (!p.inPalette) consoleLog('🗑 Block deleted.'); }
+  onProgramChanged();
+}
+function ddCancel() {
+  const p = DD.p; DD.p = null; if (!p || !p.started) return;
+  ddClearTargets(); $('block-palette').classList.remove('trash-mode'); document.body.classList.remove('is-dragging');
+  p.el.remove(); onProgramChanged();
+}
+function tapAdd(src) {
+  const el = createBlockEl(src.dataset.key, JSON.parse(src.dataset.preset || '{}'));
+  if (el.classList.contains('chip')) {
+    const empty = [...$('program-root').querySelectorAll('.cond-socket')].find(s => !s.querySelector('.blk'));
+    if (!empty) { logToast('Drag sensor chips into the condition socket of an If / While block.'); return; }
+    empty.appendChild(el);
+  } else $('program-root').appendChild(el);
+  el.animate && el.animate([{ transform: 'scale(.8)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 180 });
+  onProgramChanged();
+}
+function initDragAndDrop() {
+  if (window.PointerEvent) {
+    document.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (ddStart(e.target, e.clientX, e.clientY, e.pointerId)) e.preventDefault();
+    }, { passive: false });
+    window.addEventListener('pointermove', e => { if (DD.p && e.pointerId === DD.p.pid) { e.preventDefault(); ddMove(e.clientX, e.clientY); } }, { passive: false });
+    window.addEventListener('pointerup', e => { if (DD.p && e.pointerId === DD.p.pid) ddEnd(); });
+    window.addEventListener('pointercancel', e => { if (DD.p && e.pointerId === DD.p.pid) ddCancel(); });
+  } else {
+    // Legacy fallback: touch events (older iPad Safari) + mouse events
+    document.addEventListener('touchstart', e => { const t = e.changedTouches[0]; if (ddStart(e.target, t.clientX, t.clientY, 'touch')) e.preventDefault(); }, { passive: false });
+    document.addEventListener('touchmove', e => { if (DD.p) { const t = e.changedTouches[0]; e.preventDefault(); ddMove(t.clientX, t.clientY); } }, { passive: false });
+    document.addEventListener('touchend', () => { if (DD.p) ddEnd(); });
+    document.addEventListener('touchcancel', () => ddCancel());
+    document.addEventListener('mousedown', e => { if (e.button === 0 && ddStart(e.target, e.clientX, e.clientY, 'mouse')) e.preventDefault(); });
+    window.addEventListener('mousemove', e => { if (DD.p) ddMove(e.clientX, e.clientY); });
+    window.addEventListener('mouseup', () => { if (DD.p) ddEnd(); });
+  }
+  const ws = $('workspace-area');
+  ws.addEventListener('input', e => { if (e.target.classList.contains('blk-in')) { if (e.target.tagName === 'INPUT') sizeInput(e.target); onProgramChanged(); } });
+  ws.addEventListener('change', e => {
+    if (e.target.tagName === 'SELECT') { const b = e.target.closest('.blk'); if (b && b.dataset.key === 'sensor') b.title = e.target.title = SENSORS[e.target.value] || ''; onProgramChanged(); }
+  });
+}
+
+// ==========================================
+// 5. SUB-STAGE PUZZLE INTERPRETER (UI controller; engine above)
+// ==========================================
+const STEP_MS = [0, 650, 420, 260, 140, 60], FLOW_MS = [0, 240, 150, 90, 45, 15];
+const RUN = { running: false, runner: null, seed: 1, ast: [], token: 0 };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const newSeed = () => (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
+function initSubstagePuzzle(subId) {
+  const L = SUBSTAGE_DATA[subId];
+  abandonRun();
+  RUN.seed = newSeed(); UI.hintShown = false; UI.particles = [];
+  const firstCat = CATEGORIES.find(c => paletteEntries().some(e => BLOCK_DEFS[e.key].cat === c.k));
+  UI.cat = firstCat ? firstCat.k : 'action';
+  renderTabs(); renderPalette();
+  $('obj-title').textContent = `Sub-stage ${L.id} · ${L.kind}`;
+  $('obj-name').textContent = L.title;
+  $('obj-goal').textContent = L.text;
+  $('console-output').innerHTML = '';
+  consoleLog(`🏝 Island ${L.island}: ${WORLD_ISLANDS[L.island - 1].name} - Sub-stage ${L.id} "${L.title}"`, 'info');
+  consoleLog('🎯 ' + L.goal);
+  if (L.mazeSeeds && L.mazeSeeds.length > 1) consoleLog(`🧩 Your program will be tested on ${L.mazeSeeds.length} different mazes.`, 'info');
+  if (L.randomFill) consoleLog('🎲 This map changes every time you press Run.', 'info');
+  setWorld(buildWorld(L, RUN.seed, 0), true);
+  loadProgram(APP_STATE.programs[subId] || []);
+  computeTargets(L, RUN.seed).then(refreshObjectives);
+}
+async function computeTargets(L, seed) {
+  const sol = solutionAST(L), r = await simulate(L, sol, seed, {});
+  L.targetSteps = r.steps; L.optimalBlocks = countBlocks(sol);
+  return r;
+}
+function refreshObjectives() {
+  const L = currentLevel(), w = UI.world; if (!L || !w || w.level !== L) return;
+  const objs = evalObjectives(L, w, RUN.running ? RUN.ast : UI.ast);
+  $('obj-list').innerHTML = objs.map(o => `<div class="obj-item${o.done ? ' done' : ''}"><span class="tick">${o.done ? '✔' : '○'}</span><span>${escapeHtml(o.label)}</span></div>`).join('');
+  const vars = Object.keys(w.vars);
+  $('obj-data').innerHTML = vars.length ? vars.map(k => `${escapeHtml(k)} = ${escapeHtml(fmtVal(w.vars[k]))}`).join('<br>') : '';
+  const multi = L.mazeSeeds && L.mazeSeeds.length > 1 ? ` · Maze ${w.variant + 1}/${L.mazeSeeds.length}` : '';
+  $('obj-meta').innerHTML = `Steps: ${w.steps}${multi}<br>⭐⭐ ≤ ${L.targetSteps != null ? (L.randomFill ? '~' : '') + L.targetSteps : '…'} steps · ⭐⭐⭐ ≤ ${L.optimalBlocks != null ? L.optimalBlocks : '…'} blocks`;
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function consoleLog(msg, cls) {
+  const out = $('console-output'), d = document.createElement('div');
+  d.className = 'con-log' + (cls ? ' ' + cls : ''); d.textContent = msg; out.appendChild(d);
+  while (out.children.length > 250) out.removeChild(out.firstChild);
+  out.scrollTop = out.scrollHeight;
+}
+function setRunUI(running) {
+  $('btnRun').disabled = running; $('btnRun').textContent = running ? '⏳ Running…' : '▶ Run Code';
+  $('btnReset').textContent = running ? '⏹ Stop' : '↺ Reset';
+  $('workspace-area').classList.toggle('locked', running);
+}
+function handleWorldEvent(ev, w) {
+  if (w !== UI.world) return;
+  switch (ev.type) {
+    case 'gem': spawnParticles(ev.x, ev.y, '#67e8f9', 18); spawnParticles(ev.x, ev.y, '#fff', 6); break;
+    case 'key': spawnParticles(ev.x, ev.y, '#facc15', 16); break;
+    case 'switch': spawnParticles(ev.x, ev.y, '#00ff88', 14); break;
+    case 'defeat': spawnParticles(ev.x, ev.y, '#ef4444', 20); spawnParticles(ev.x, ev.y, '#ddd', 10); showSpeech('Hi-yah!'); break;
+    case 'door': spawnParticles(ev.x, ev.y, '#facc15', 14); break;
+    case 'splash': spawnParticles(ev.x, ev.y, '#93c5fd', 24); break;
+    case 'hurt': spawnParticles(ev.x, ev.y, '#f87171', 16); break;
+    case 'build': spawnParticles(ev.x, ev.y, '#a3e635', 14); break;
+    case 'portal': spawnParticles(ev.x, ev.y, '#c084fc', 20); break;
+    case 'beacon': spawnParticles(ev.x, ev.y, '#00ffd5', 20); break;
+    case 'say': showSpeech(ev.text, w.sel[0]); break;
+    case 'bump': showSpeech('Bonk!', w.agents.indexOf(ev.a)); break;
+  }
+}
+async function runProgram() {
+  if (RUN.running) return;
+  hideVictory();
+  const L = currentLevel(), ast = readWorkspaceAST();
+  UI.ast = ast;
+  if (!ast.length) { consoleLog('⚠️ Your program is empty - drag blocks from the palette into the workspace.', 'err'); showSpeech('What should I do?'); return; }
+  if (L.randomFill) RUN.seed = newSeed();
+  const token = ++RUN.token;
+  RUN.running = true; RUN.ast = ast; setRunUI(true);
+  consoleLog('▶ Running program…', 'info');
+  const res = await simulate(L, ast, RUN.seed, {
+    onWorld: async (w, v, n) => { setWorld(w, true); if (n > 1) { consoleLog(`🧩 Maze variant ${v + 1} of ${n}`, 'info'); if (v > 0) await sleep(450); } },
+    setRunner: r => { RUN.runner = r; },
+    wait: kind => sleep(kind === 'flow' ? FLOW_MS[UI.speed] : STEP_MS[UI.speed]).then(refreshObjectives),
+    highlight: id => highlightBlock(id),
+    event: (ev, w) => handleWorldEvent(ev, w),
+    log: (m, c) => consoleLog(m, c)
+  });
+  if (token !== RUN.token) return; // superseded (user navigated away)
+  highlightBlock(null);
+  RUN.running = false; RUN.runner = null; setRunUI(false); refreshObjectives();
+  if (APP_STATE.currentView !== 'WORKBENCH' || currentLevel() !== L) return;
+  if (res.stopped) { consoleLog('⏹ Program stopped.', 'info'); return; }
+  if (!res.ok) {
+    consoleLog('❌ ' + res.error, 'err'); showSpeech(res.incomplete ? 'Not finished yet…' : 'Oops!');
+    const gp = $('game-panel'); gp.classList.remove('shake'); void gp.offsetWidth; gp.classList.add('shake');
+    return;
+  }
+  consoleLog(`✅ All objectives complete in ${res.steps} steps!`, 'ok'); showSpeech('Yay! 🎉');
+  await computeTargets(L, RUN.seed);
+  await sleep(450);
+  if (APP_STATE.currentView === 'WORKBENCH' && currentLevel() === L) onSubstageVictory(L.id, res.steps, countBlocks(ast));
+}
+function stopProgram() { if (RUN.runner) RUN.runner.stop(); }
+function abandonRun() { // stop and immediately release the UI (used when leaving a sub-stage)
+  if (!RUN.running) return;
+  stopProgram(); RUN.token++; RUN.running = false; RUN.runner = null; setRunUI(false); highlightBlock(null);
+}
+function resetPuzzle() {
+  if (RUN.running) { stopProgram(); }
+  const L = currentLevel(); highlightBlock(null); UI.particles = [];
+  setWorld(buildWorld(L, RUN.seed, 0), true);
+  consoleLog('↺ Puzzle reset.', 'info');
+}
+
+// ---------- Star Evaluation & Unlocking ----------
+function onSubstageVictory(subId, stepsUsed, blocksUsed) {
+  const meta = SUBSTAGE_DATA[subId];
+  let stars = 1; // 1 star for clearing puzzle
+  if (stepsUsed <= meta.targetSteps) stars++;
+  if (blocksUsed <= meta.optimalBlocks) stars++;
+  const prevBest = APP_STATE.completedSubstages[subId] || 0;
+  APP_STATE.completedSubstages[subId] = Math.max(prevBest, stars);
+  APP_STATE.totalStars = Object.values(APP_STATE.completedSubstages).reduce((a, b) => a + b, 0);
+  // Check Island completion -> Unlock next Island
+  const currentIsland = parseInt(subId.split('.')[0], 10);
+  const islandSubIds = [`${currentIsland}.1`, `${currentIsland}.2`, `${currentIsland}.3`];
+  const allSubCleared = islandSubIds.every(id => (APP_STATE.completedSubstages[id] || 0) >= 1);
+  let newIsland = null;
+  if (allSubCleared && currentIsland < 12 && !APP_STATE.unlockedIslands.includes(currentIsland + 1)) {
+    APP_STATE.unlockedIslands.push(currentIsland + 1); newIsland = currentIsland + 1;
+  }
+  saveProgressToStorage();
+  updateHeaders();
+  showVictoryOverlay(subId, stars, { stepsUsed, blocksUsed, prevBest, newIsland });
+}
+
+// ==========================================
+// 6. UI MODALS & OVERLAYS
+// ==========================================
+let toastTimer = null;
+function logToast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+function nextSubstageId(subId) { const i = SUBSTAGE_ORDER.indexOf(subId); return i >= 0 && i < SUBSTAGE_ORDER.length - 1 ? SUBSTAGE_ORDER[i + 1] : null; }
+function showVictoryOverlay(subId, stars, info) {
+  info = info || {};
+  hideAbout(); hideBriefing(false);
+  const L = SUBSTAGE_DATA[subId], next = nextSubstageId(subId);
+  $('v-title').textContent = `🎉 Sub-stage ${subId} Clear!`;
+  $('v-sub').textContent = `${L.title} · Island ${L.island}: ${WORLD_ISLANDS[L.island - 1].name}`;
+  const st = document.querySelectorAll('#victory-overlay .v-star');
+  st.forEach(s => s.classList.remove('on'));
+  st.forEach((s, i) => { if (i < stars) setTimeout(() => s.classList.add('on'), 150 + i * 220); });
+  const eff = Math.round(100 * Math.min(1, (L.targetSteps || info.stepsUsed) / Math.max(1, info.stepsUsed)) * 0.6 + 100 * Math.min(1, (L.optimalBlocks || info.blocksUsed) / Math.max(1, info.blocksUsed)) * 0.4);
+  $('v-score').textContent = `⭐ ${stars}/3 stars · Efficiency ${eff}%` + (info.prevBest > stars ? ` (best: ${info.prevBest}/3)` : '');
+  const okS = info.stepsUsed <= L.targetSteps, okB = info.blocksUsed <= L.optimalBlocks;
+  $('v-stats').innerHTML =
+    `<div><span class="ok">✔</span> ⭐ Objectives cleared</div>` +
+    `<div><span class="${okS ? 'ok' : 'no'}">${okS ? '✔' : '✘'}</span> ⭐ Steps: ${info.stepsUsed} (target ≤ ${L.targetSteps})</div>` +
+    `<div><span class="${okB ? 'ok' : 'no'}">${okB ? '✔' : '✘'}</span> ⭐ Blocks: ${info.blocksUsed} (optimal ≤ ${L.optimalBlocks})</div>`;
+  $('v-unlock').textContent = info.newIsland ? `🏝 Island ${info.newIsland}: ${WORLD_ISLANDS[info.newIsland - 1].name} unlocked on the World Map!` : (L.sub < 3 ? `🔓 Sub-stage ${next} unlocked` : '');
+  const btn = $('btnNextSub');
+  btn.textContent = next ? 'Next Sub-stage ▶' : '🏆 World Map';
+  btn.onclick = () => { hideVictory(); next ? launchSubstage(next) : showWorldMap(); };
+  $('victory-overlay').classList.add('show');
+  if (info.newIsland) logToast(`🏝 Island ${info.newIsland} unlocked!`);
+}
+function hideVictory() { $('victory-overlay').classList.remove('show'); }
+
+// ---------- About window & Captain's Briefing ----------
+const APP_VERSION = '1.0';
+const APP_CREDIT = 'School of EIT, ITE College West'; // ✏️ School / department shown in the About footer
+const APP_AUTHOR = 'Khiew Tzong Yong';                // ✏️ App creator shown in the About footer
+const INTRO_KEY = 'codeodyssey_intro_seen';
+let introSeenMemory = null; // fallback when localStorage is unavailable
+
+// Captain Algo - an original character drawn inline (reused by the briefing and the About window)
+const CAPTAIN_SVG = `<svg class="cap-svg" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+  <path d="M26 200 Q28 146 80 136 Q132 146 134 200 Z" fill="#1a1e3a" stroke="#00d4ff" stroke-opacity=".35" stroke-width="2"/>
+  <path d="M68 137 L80 160 L92 137 Z" fill="#e8ecff"/>
+  <path d="M60 140 L80 168 L80 200 M100 140 L80 168" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="72" cy="178" r="3.6" fill="#ffd700"/><circle cx="88" cy="178" r="3.6" fill="#ffd700"/>
+  <circle cx="72" cy="192" r="3.6" fill="#ffd700"/><circle cx="88" cy="192" r="3.6" fill="#ffd700"/>
+  <path d="M34 152 L26 156 L40 160 Z M126 152 L134 156 L120 160 Z" fill="#ffd700"/>
+  <path d="M116 150 Q136 158 132 178" fill="none" stroke="#1a1e3a" stroke-width="14" stroke-linecap="round"/>
+  <g transform="rotate(-32 132 176)">
+    <rect x="126" y="122" width="11" height="46" rx="3" fill="#c9a227"/>
+    <rect x="124" y="114" width="15" height="12" rx="3" fill="#ffd700"/>
+    <rect x="126" y="140" width="11" height="4" fill="#8b5a2b"/>
+  </g>
+  <circle cx="132" cy="178" r="7" fill="#f2c9a0"/>
+  <rect x="72" y="120" width="16" height="18" rx="6" fill="#e9b98d"/>
+  <circle cx="47" cy="96" r="7" fill="#e9b98d"/><circle cx="113" cy="96" r="7" fill="#e9b98d"/>
+  <circle cx="80" cy="94" r="34" fill="#f2c9a0"/>
+  <path d="M49 100 Q50 130 80 134 Q110 130 111 100 Q106 118 80 120 Q54 118 49 100 Z" fill="#8a5a3c"/>
+  <path d="M68 109 Q74 104 80 108 Q86 104 92 109 Q86 112 80 110 Q74 112 68 109 Z" fill="#7a4e33"/>
+  <path class="cap-mouth" d="M73 114 Q80 121 87 114 Q80 117 73 114 Z" fill="#7a2e2e"/>
+  <circle cx="62" cy="103" r="5" fill="#ff8f8f" opacity=".35"/><circle cx="98" cy="103" r="5" fill="#ff8f8f" opacity=".35"/>
+  <path d="M62 82 Q68 78 74 82 M86 82 Q92 78 98 82" fill="none" stroke="#6b4426" stroke-width="2.6" stroke-linecap="round"/>
+  <g class="cap-eye"><ellipse cx="68" cy="92" rx="3.6" ry="4.6" fill="#1a1e3a"/><circle cx="69.3" cy="90.4" r="1.3" fill="#fff"/></g>
+  <g class="cap-eye"><ellipse cx="92" cy="92" rx="3.6" ry="4.6" fill="#1a1e3a"/><circle cx="93.3" cy="90.4" r="1.3" fill="#fff"/></g>
+  <ellipse cx="80" cy="66" rx="46" ry="9" fill="#11142a"/>
+  <path d="M42 66 Q42 32 80 28 Q118 32 118 66 Z" fill="#1a1e3a"/>
+  <path d="M52 40 Q66 31 82 31" fill="none" stroke="#2c3363" stroke-width="4" stroke-linecap="round"/>
+  <rect x="42" y="54" width="76" height="9" fill="#00d4ff"/>
+  <circle cx="80" cy="44" r="10" fill="#ffd700"/>
+  <path d="M80 37 L80 51 M75 41 L85 41 M74 47 Q80 53 86 47" fill="none" stroke="#1a1e3a" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="80" cy="36.5" r="1.8" fill="none" stroke="#1a1e3a" stroke-width="1.5"/>
+</svg>`;
+
+const BRIEFING_PAGES = [
+  { title: 'Welcome aboard, explorer!',
+    text: "I'm Captain Algo, and this is the Code Odyssey. Ahead of us lie 12 islands, each hiding a powerful way of thinking. Before we set sail, let me tell you what this voyage is really about." },
+  { title: 'What is Computational Thinking?',
+    text: "Computational Thinking is how problem-solvers think. It means breaking a problem down, spotting patterns, focusing on what matters, and planning clear steps a computer – or a person – can follow. It isn't just for programmers; you can use it in any job, and in everyday life." },
+  { title: '1. Decomposition – break it down',
+    text: 'A big problem feels scary. A small one feels easy. Decomposition means splitting a big problem into smaller steps. On Island 1 you will guide your agent one command at a time.',
+    chips: ['🧩 Big problem → small steps'] },
+  { title: '2. Pattern Recognition – spot the repeat',
+    text: 'Good thinkers notice when something happens again and again. Instead of writing the same steps many times, you will use loops to repeat them. You will master this on the For Loops and While Loops islands.',
+    chips: ['🔁 Same steps? Use a loop!'] },
+  { title: '3. Abstraction – focus on what matters',
+    text: "Abstraction means hiding the details you don't need and giving a useful idea a simple name. You will package steps into functions, then call them whenever you need them. Watch for this on the Functions and Parameters islands.",
+    chips: ['📦 Name it once, reuse it often'] },
+  { title: '4. Algorithms – plan the steps',
+    text: 'An algorithm is a clear, step-by-step plan that always works. The best algorithms solve not just one map, but many. On the Algorithms island, your plan will be tested on mazes you have never seen!',
+    chips: ['🧭 A good plan works every time'] },
+  { title: 'How to sail the Code Odyssey',
+    text: 'Pick an unlocked island, then choose a sub-stage. Drag blocks from the palette into your program, then press ▶ Run Code to watch your agent follow your instructions. If something goes wrong, read the console, fix your blocks and try again – mistakes are how explorers learn!',
+    chips: ['🖐 Drag → ▶ Run → 🔍 Check → 🔧 Fix'] },
+  { title: 'Earn your stars, Captain-in-training!',
+    text: '⭐ Clear the puzzle. ⭐⭐ Use fewer steps. ⭐⭐⭐ Use the fewest blocks. Clear all 3 sub-stages on an island to unlock the next one. Stuck? Tap 💡 for a hint. Now, raise the anchor – your odyssey begins!',
+    chips: ['⭐ 108 stars await you'] }
+];
+const BRIEF = { open: false, page: 0, timer: null, typing: false, full: '' };
+let aboutOpen = false;
+
+function hasSeenBriefing() {
+  try { if (localStorage.getItem(INTRO_KEY) === '1') return true; } catch (e) { /* storage unavailable */ }
+  return introSeenMemory === '1';
+}
+function setBriefingSeen() {
+  introSeenMemory = '1';
+  try { localStorage.setItem(INTRO_KEY, '1'); } catch (e) { /* keep in memory only */ }
+}
+function clearBriefingSeen() {
+  introSeenMemory = null;
+  try { localStorage.removeItem(INTRO_KEY); } catch (e) { /* ignore */ }
+}
+function stopBriefTyping() {
+  clearInterval(BRIEF.timer); BRIEF.timer = null; BRIEF.typing = false;
+  $('brief-captain').classList.remove('brief-talking');
+}
+function showBriefing() {
+  hideVictory(); hideAbout();
+  BRIEF.open = true;
+  $('briefing-overlay').classList.add('show');
+  renderBriefingPage(0);
+  setTimeout(() => { if (BRIEF.open) $('briefNext').focus(); }, 0);
+}
+function hideBriefing(markSeen) {
+  stopBriefTyping();
+  if (markSeen) setBriefingSeen();
+  if (!BRIEF.open) return;
+  BRIEF.open = false;
+  $('briefing-overlay').classList.remove('show');
+}
+function renderBriefingPage(index) {
+  const n = BRIEFING_PAGES.length, i = Math.max(0, Math.min(n - 1, index)), p = BRIEFING_PAGES[i], last = i === n - 1;
+  BRIEF.page = i;
+  $('brief-head').textContent = `Captain Algo · Page ${i + 1} of ${n}`;
+  const title = $('brief-title'); title.textContent = p.title || ''; title.style.display = p.title ? '' : 'none';
+  const chips = $('brief-chips'); chips.innerHTML = '';
+  (p.chips || []).forEach(c => { const d = document.createElement('span'); d.className = 'brief-chip'; d.textContent = c; chips.appendChild(d); });
+  chips.style.display = p.chips && p.chips.length ? '' : 'none';
+  $('brief-dots').innerHTML = BRIEFING_PAGES.map((_, k) => `<span class="brief-dot${k === i ? ' on' : k < i ? ' past' : ''}"></span>`).join('');
+  $('briefSkip').style.visibility = last ? 'hidden' : 'visible';
+  $('briefBack').style.visibility = i === 0 ? 'hidden' : 'visible';
+  $('briefNext').textContent = last ? '⛵ Set Sail!' : 'Next ▶';
+  // Typewriter (~18 ms per character). A tap while typing completes the text first.
+  stopBriefTyping();
+  const textEl = $('brief-text'), chars = Array.from(p.text);
+  BRIEF.full = p.text; textEl.scrollTop = 0;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { textEl.textContent = p.text; return; }
+  textEl.textContent = ''; BRIEF.typing = true; $('brief-captain').classList.add('brief-talking');
+  let k = 0;
+  BRIEF.timer = setInterval(() => {
+    k++; textEl.textContent = chars.slice(0, k).join('');
+    if (k >= chars.length) stopBriefTyping();
+  }, 18);
+}
+function briefingNext() {
+  if (BRIEF.typing) { stopBriefTyping(); $('brief-text').textContent = BRIEF.full; return; }
+  if (BRIEF.page >= BRIEFING_PAGES.length - 1) { hideBriefing(true); return; }
+  renderBriefingPage(BRIEF.page + 1);
+}
+function briefingBack() { if (BRIEF.page > 0) renderBriefingPage(BRIEF.page - 1); }
+function briefingSkip() { hideBriefing(true); }
+
+function showAbout() {
+  if (RUN.running) stopProgram();
+  hideVictory(); if (BRIEF.open) hideBriefing(false);
+  renderAbout();
+  aboutOpen = true;
+  $('about-overlay').classList.add('show');
+  $('about-scroll').scrollTop = 0;
+  setTimeout(() => { if (aboutOpen) $('btnAboutClose').focus(); }, 0);
+}
+function hideAbout() {
+  if (!aboutOpen) return;
+  aboutOpen = false;
+  $('about-overlay').classList.remove('show');
+}
+function renderAbout() { // rebuilt every time About opens so the figures are current
+  const islands = WORLD_ISLANDS.map(isl => {
+    const open = isIslandUnlocked(isl.id);
+    return `<li class="about-isl${open ? '' : ' locked'}"><span class="ai-icon">${isl.icon}</span>` +
+      `<span class="ai-name">${isl.id}. ${escapeHtml(isl.name)}<span>${escapeHtml(isl.concept)}</span></span>` +
+      `<span class="ai-stars">${open ? '⭐ ' + islandStars(isl.id) + '/9' : '🔒'}</span></li>`;
+  }).join('');
+  $('about-scroll').innerHTML = `
+    <div class="about-header">
+      <div class="about-captain" aria-hidden="true">${CAPTAIN_SVG}</div>
+      <div>
+        <div class="app-logo about-name">⛵ Code Odyssey</div>
+        <div class="about-tagline">Your journey from first step to algorithm</div>
+        <div class="about-version">Version ${escapeHtml(APP_VERSION)}</div>
+      </div>
+    </div>
+    <div class="about-h">What is this app?</div>
+    <p class="about-p">Code Odyssey is a block-coding adventure that builds Computational Thinking skills. Across 12 islands and 36 sub-stages, you will guide an agent through puzzles using drag-and-drop blocks – no typing and no syntax errors, just clear thinking.</p>
+    <div class="about-h">The 4 pillars of Computational Thinking</div>
+    <div class="about-pillars">
+      <div class="about-pillar"><b>🧩 Decomposition</b>Break big problems into small steps</div>
+      <div class="about-pillar"><b>🔁 Pattern Recognition</b>Spot repeats and use loops</div>
+      <div class="about-pillar"><b>📦 Abstraction</b>Name it once, reuse it often</div>
+      <div class="about-pillar"><b>🧭 Algorithms</b>Plan steps that always work</div>
+    </div>
+    <div class="about-h">Your voyage</div>
+    <ul class="about-islands">${islands}</ul>
+    <div class="about-total">Total: ⭐ ${APP_STATE.totalStars}/${MAX_STARS}</div>
+    <div class="about-h">How stars work</div>
+    <p class="about-p">⭐ Clear the puzzle · ⭐⭐ Use fewer steps · ⭐⭐⭐ Use the fewest blocks</p>
+    <button class="btn-primary" id="btnReplayBriefing">🧭 Replay Captain's Briefing</button>
+    <div class="about-foot">Created by <b>${escapeHtml(APP_AUTHOR)}</b>, ${escapeHtml(APP_CREDIT)}.<br>Developed for learners at ${escapeHtml(APP_CREDIT)}. Built as a single-file web app – works offline and on iPad.</div>`;
+  $('btnReplayBriefing').addEventListener('click', () => { hideAbout(); showBriefing(); });
+}
+function bindOverlays() {
+  $('brief-captain').innerHTML = CAPTAIN_SVG;
+  $('briefNext').addEventListener('click', briefingNext);
+  $('briefBack').addEventListener('click', briefingBack);
+  $('briefSkip').addEventListener('click', briefingSkip);
+  document.querySelectorAll('[data-about]').forEach(b => b.addEventListener('click', showAbout));
+  $('btnAboutClose').addEventListener('click', hideAbout);
+  $('about-overlay').addEventListener('click', e => { if (e.target.id === 'about-overlay') hideAbout(); });
+}
+
+// ==========================================
+// 7. INITIALIZATION & BOOT
+// ==========================================
+function bindCanvasNav() {
+  const wm = $('world-map-canvas'), iv = $('island-canvas');
+  const hitIsland = e => { if (!UI.wmT) return null; const p = toLogical(wm, UI.wmT, e); const f = WORLD_ISLANDS.find(i => Math.hypot((p.x - i.x) / 1.15, p.y - i.y) < 56); return f ? f.id : null; };
+  const overlayOpen = () => BRIEF.open || aboutOpen;
+  wm.addEventListener('pointermove', e => { if (overlayOpen()) return; UI.hoverIsland = hitIsland(e); wm.style.cursor = UI.hoverIsland ? 'pointer' : 'default'; });
+  wm.addEventListener('pointerleave', () => { UI.hoverIsland = null; });
+  wm.addEventListener('click', e => { if (overlayOpen()) return; const id = hitIsland(e); if (id) selectIsland(id); });
+  const hitNode = e => { if (!UI.ivT) return null; const p = toLogical(iv, UI.ivT, e); const k = NODE_POS.findIndex(n => Math.hypot(p.x - n.x, p.y - n.y) < 46 || (Math.abs(p.x - n.x) < 95 && p.y > n.y + 40 && p.y < n.y + 120)); return k >= 0 ? k : null; };
+  iv.addEventListener('pointermove', e => { if (overlayOpen()) return; UI.hoverNode = hitNode(e); iv.style.cursor = UI.hoverNode != null ? 'pointer' : 'default'; });
+  iv.addEventListener('pointerleave', () => { UI.hoverNode = null; });
+  iv.addEventListener('click', e => { if (overlayOpen()) return; const k = hitNode(e); if (k != null) launchSubstage(`${APP_STATE.currentIslandId}.${k + 1}`); });
+}
+function bindControls() {
+  $('btnResetProgress').addEventListener('click', () => {
+    if (!confirm('Reset ALL progress? Stars, unlocked islands and saved programs will be erased.')) return;
+    APP_STATE.unlockedIslands = [1]; APP_STATE.completedSubstages = {}; APP_STATE.programs = {}; recomputeProgress();
+    clearBriefingSeen(); // the Captain's Briefing appears again on the next load
+    saveProgressToStorage(); updateHeaders(); logToast('↺ Progress reset. Good luck, explorer!');
+  });
+  $('btnIslandBack').addEventListener('click', showWorldMap);
+  $('btnBackWorld').addEventListener('click', showWorldMap);
+  $('btnBackIslands').addEventListener('click', () => selectIsland(APP_STATE.currentIslandId));
+  $('btnRun').addEventListener('click', runProgram);
+  $('btnReset').addEventListener('click', resetPuzzle);
+  $('btnClear').addEventListener('click', () => {
+    if (RUN.running) return;
+    if (UI.ast.length && !confirm('Remove all blocks from the workspace?')) return;
+    $('program-root').innerHTML = ''; onProgramChanged(); consoleLog('🗑 Workspace cleared.');
+  });
+  $('btnHint').addEventListener('click', () => {
+    const L = currentLevel();
+    if (!UI.hintShown) { consoleLog('💡 Hint: ' + L.hint, 'info'); UI.hintShown = true; logToast('💡 Hint added to the console. Tap 💡 again for the full solution.'); return; }
+    if (RUN.running) return;
+    if (confirm('Load the reference 3-star solution into the workspace? Your current blocks will be replaced.')) { loadProgram(solutionAST(L)); consoleLog('🧩 Reference solution loaded - press ▶ Run Code.', 'info'); }
+  });
+  const sl = $('speedSlider'); sl.value = UI.speed;
+  sl.addEventListener('input', () => { UI.speed = +sl.value; saveProgressToStorage(); });
+  $('obj-head').addEventListener('click', () => { const b = $('objective-box'); b.classList.toggle('collapsed'); $('obj-toggle').textContent = b.classList.contains('collapsed') ? '▸ show' : '▾ hide'; });
+  $('btnReplay').addEventListener('click', () => { hideVictory(); resetPuzzle(); });
+  $('btnVictoryIsland').addEventListener('click', () => selectIsland(currentLevel().island));
+  $('victory-overlay').addEventListener('click', e => { if (e.target.id === 'victory-overlay') hideVictory(); });
+  document.addEventListener('keydown', e => {
+    if (BRIEF.open) { // the briefing owns the keyboard while open
+      if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); briefingNext(); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); briefingBack(); }
+      else if (e.key === 'Escape') { e.preventDefault(); briefingSkip(); }
+      return;
+    }
+    if (aboutOpen) { // Esc closes About; other shortcuts are disabled while it is open
+      if (e.key === 'Escape') { e.preventDefault(); hideAbout(); }
+      else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) e.preventDefault(); // no Run shortcut, no button activation
+      return;
+    }
+    if (e.key === 'Escape') hideVictory();
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && APP_STATE.currentView === 'WORKBENCH') runProgram();
+  });
+}
+function frameLoop(ts) {
+  const dt = UI.last ? Math.min(0.05, (ts - UI.last) / 1000) : 0.016; UI.last = ts; UI.time += dt;
+  try {
+    if (APP_STATE.currentView === 'WORLD_MAP') drawWorldMap();
+    else if (APP_STATE.currentView === 'ISLAND_VIEW') drawIslandView();
+    else drawPuzzleMap(dt);
+  } catch (e) { console.error(e); }
+  requestAnimationFrame(frameLoop);
+}
+function boot() {
+  loadProgressFromStorage();
+  bindCanvasNav(); bindControls(); bindOverlays(); initDragAndDrop();
+  APP_STATE.currentView = 'WORLD_MAP';
+  updateHeaders(); renderWorldMapCanvas();
+  requestAnimationFrame(frameLoop);
+  if (!hasSeenBriefing()) showBriefing(); // first launch on this device
+}
+boot();
+</script>
+</body>
+</html>
