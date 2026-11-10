@@ -144,9 +144,26 @@ The game logic in sections 1 and 5 does not touch the page, so it can be tested 
 
 ## Browser support
 
-- **Desktop:** current Chrome, Edge, Firefox and Safari
-- **iPad:** Safari and Chrome on iPadOS 13 or later, with touch drag-and-drop
-- **Narrow screens:** below 760px the Workbench stacks the map above the blocks. Below 600px the briefing stacks the captain above the text.
+| Device | Layout |
+| --- | --- |
+| **Desktop** (Chrome, Edge, Firefox, Safari) | Map and blocks side by side (62% / 38%) |
+| **iPad** (Safari / Chrome, iPadOS 13+) | Side by side in landscape; stacked in portrait. Touch drag-and-drop. |
+| **Phones in portrait** (iPhone, Android) | The World Map and Island View switch to tall layouts with larger tap targets. The Workbench stacks the map above the blocks, uses short button labels, and starts with the objectives collapsed (tap **▸ show**). |
+| **Phones in landscape** | Compact side-by-side Workbench with slimmer bars and console |
+| **Folding phones** (Galaxy Z Fold / Z Flip) | The cover screen uses the phone layout. Unfolded, the app uses the full inner screen in either orientation. |
+| **Dual-screen and spanned foldables** | On browsers that support the Viewport Segments API, the puzzle and the blocks each stay on their own screen, and dialogs never sit across the hinge. Side-by-side screens put the puzzle on the left and the blocks on the right. A half-folded "tabletop" device puts the puzzle on top and the blocks below. |
+
+On phones and foldables:
+- Tapping a palette block adds it straight to your program, which is quicker than dragging on a small screen.
+- Long-pressing a block does not open the phone's context menu.
+
+**Tested sizes** (Chrome mobile emulation with real touch input):
+- Phones: 344×882 (Fold cover), 360×740, 390×844, 412×915 (Z Flip)
+- Fold unfolded: 673×841 and 841×673
+- Landscape phones: 667×375 and 844×390
+- Emulated hinges: dual-screen 1114×705 and tabletop 720×1114
+
+Testing used emulation only. Before relying on a specific model in class, check it on the real device.
 
 ---
 

@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#111428">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Code Odyssey">
 <meta name="description" content="Code Odyssey - learn Computational Thinking across 12 islands and 36 sub-stages with drag-and-drop block coding.">
@@ -204,10 +206,15 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .btn-action:disabled { opacity: .5; cursor: not-allowed; }
 .speed-ctl { display: flex; align-items: center; gap: 4px; font-size: 14px; }
 .speed-ctl input { width: 72px; accent-color: #00d4ff; }
+#workbench-controls { flex-wrap: wrap; }
+.btn-action { white-space: nowrap; }
+#btnRun { min-width: 110px; }
+#btnReset { min-width: 84px; }
 
 /* Victory overlay */
 #victory-overlay { position: fixed; inset: 0; background: rgba(3,4,12,.75); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px; }
 #victory-overlay.show { display: flex; }
+.victory-card { max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; }
 .victory-card { background: linear-gradient(160deg, #151936, #0d1024); border: 1px solid #00d4ff55; border-radius: 18px; padding: 26px 28px; width: min(440px, 100%); text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 40px #00d4ff22; animation: pop .35s ease-out; }
 @keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .v-title { font-size: 22px; font-weight: 800; color: #fff; }
@@ -312,6 +319,82 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
   #workbench-controls { padding: 8px; gap: 6px; }
   .speed-ctl input { width: 56px; }
 }
+
+@media (max-width: 900px) { .topbar-sub { display: none; } }
+@media (max-width: 760px) { #nav-header .breadcrumbs { display: none; } #nav-header { flex-wrap: nowrap; } }
+
+/* ── Mobile phones (portrait), incl. foldable cover screens ── */
+@media (max-width: 600px) {
+  .hide-sm { display: none; }
+  .app-topbar { padding: 6px 10px; gap: 6px; }
+  .btn-nav { padding: 7px 10px; font-size: 12px; }
+  .app-logo { font-size: 17px; }
+  .star-pill { padding: 4px 9px; font-size: 12px; }
+  #island-bar { flex-wrap: nowrap; }
+  #island-title { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #console-output { height: 52px; }
+  #workbench-controls { flex-wrap: wrap; }
+  .speed-ctl input { width: 52px; }
+  #block-palette { max-height: 30%; min-height: 60px; padding: 8px; gap: 6px; }
+  #workspace-area { padding: 10px; }
+  .v-block.c-block { min-width: 0; }
+  .cat-tab { padding: 9px 4px; font-size: 11px; }
+  .cat-tab .cnt { display: none; }
+  .btn-action, .btn-icon { min-height: 40px; }
+  #workbench-controls { gap: 6px; padding: 8px; }
+  #btnRun { min-width: 96px; }
+  #btnReset { min-width: 72px; }
+  .btn-icon { padding: 8px; }
+}
+@media (max-width: 380px) { .hide-xs { display: none; } .speed-ctl input { width: 40px; } }
+
+/* ── Short screens: phones in landscape ── */
+@media (max-height: 500px) {
+  .topbar-sub, #nav-header .breadcrumbs { display: none; }
+  .app-topbar { padding: 4px 10px; flex-wrap: nowrap; }
+  .btn-nav { padding: 5px 10px; font-size: 12px; }
+  .app-logo { font-size: 16px; }
+  .star-pill { padding: 3px 9px; font-size: 12px; }
+  #workbench-body { flex-direction: row; }
+  #game-panel { flex: 55; height: auto; }
+  #block-panel { flex: 45; min-width: 300px; border-top: none; border-left: 2px solid #1e2242; }
+  .cat-tab { padding: 6px; font-size: 11px; }
+  #block-palette { padding: 6px; gap: 6px; min-height: 0; max-height: 34%; }
+  #workspace-area { padding: 8px; }
+  .ws-head { margin-bottom: 4px; }
+  #workbench-controls { padding: 5px 8px; gap: 6px; }
+  .speed-ctl input { width: 46px; }
+  .btn-action { padding: 7px; font-size: 13px; }
+  .btn-icon { padding: 7px 8px; }
+  #console-output { height: 40px; padding: 4px 10px; }
+  .victory-card { padding: 14px 18px; }
+  .v-stars { font-size: 30px; margin: 4px 0 2px; }
+  .v-score { margin-bottom: 6px; }
+  .v-stats { line-height: 1.45; font-size: 12px; padding: 6px 12px; }
+  .v-unlock { margin-top: 6px; }
+  .v-btns { margin-top: 10px; }
+  .v-btns button { padding: 9px; }
+  .brief-card { padding: 12px 18px 10px; }
+  .brief-captain { width: 104px; }
+  .brief-foot { margin-top: 8px; }
+}
+
+/* ── Foldables & dual-screen devices (Viewport Segments API) ── */
+/* Side-by-side screens: puzzle on the left screen, blocks on the right, dialogs on one screen */
+@media (horizontal-viewport-segments: 2) {
+  #workbench-body { flex-direction: row; }
+  #game-panel { flex: 0 0 env(viewport-segment-width 0 0); height: auto; }
+  #block-panel { flex: 1 1 0; min-width: 0; margin-left: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0)); border-left: none; border-top: none; }
+  #victory-overlay, #briefing-overlay, #about-overlay { padding-right: calc(100vw - env(viewport-segment-right 0 0) + 16px); }
+}
+/* Stacked screens (half-folded "tabletop"): puzzle on the top screen, blocks on the bottom */
+@media (vertical-viewport-segments: 2) {
+  #workbench-body { flex-direction: column; }
+  #game-panel { flex: none; height: calc(env(viewport-segment-bottom 0 0) - var(--wb-header-h, 52px)); }
+  #block-panel { flex: 1 1 0; min-width: 0; margin-top: calc(env(viewport-segment-top 0 1) - env(viewport-segment-bottom 0 0)); border-left: none; border-top: none; }
+  #victory-overlay, #briefing-overlay, #about-overlay { padding-bottom: calc(100vh - env(viewport-segment-bottom 0 0) + 16px); }
+  .victory-card, .brief-card, .about-card { max-height: calc(env(viewport-segment-height 0 0) - 32px); }
+}
 </style>
 </head>
 <body>
@@ -325,8 +408,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
     </div>
     <div class="topbar-group">
       <span class="star-pill" id="wm-stars">⭐ 0/108</span>
-      <button class="btn-nav" id="btnAboutWorld" data-about>ℹ️ About</button>
-      <button class="btn-nav danger" id="btnResetProgress" title="Erase all saved progress">↺ Reset Progress</button>
+      <button class="btn-nav" id="btnAboutWorld" data-about aria-label="About">ℹ️<span class="hide-xs"> About</span></button>
+      <button class="btn-nav danger" id="btnResetProgress" title="Erase all saved progress">↺ Reset<span class="hide-sm"> Progress</span></button>
     </div>
   </div>
   <canvas id="world-map-canvas" aria-label="World map with 12 islands"></canvas>
@@ -335,10 +418,10 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 <!-- ============ VIEW 2: ISLAND SUB-STAGE MAP ============ -->
 <div id="screen-island" class="view-screen">
   <div class="app-topbar" id="island-bar">
-    <button class="btn-nav" id="btnIslandBack">⬅ World Map</button>
+    <button class="btn-nav" id="btnIslandBack">⬅ <span class="hide-sm">World </span>Map</button>
     <div id="island-title">Island 1: Commands</div>
     <div class="topbar-group">
-      <button class="btn-nav" id="btnAboutIsland" data-about>ℹ️ About</button>
+      <button class="btn-nav" id="btnAboutIsland" data-about aria-label="About">ℹ️<span class="hide-xs"> About</span></button>
       <span class="star-pill" id="island-stars">Stars: ⭐ 0/9</span>
     </div>
   </div>
@@ -349,12 +432,12 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 <div id="screen-workbench" class="view-screen">
   <div class="app-topbar" id="nav-header">
     <div class="topbar-group">
-      <button class="btn-nav" id="btnBackWorld">⬅ World Map</button>
-      <button class="btn-nav" id="btnBackIslands">⬅ Islands</button>
+      <button class="btn-nav" id="btnBackWorld">⬅ <span class="hide-sm">World </span>Map</button>
+      <button class="btn-nav" id="btnBackIslands">⬅ Island<span class="hide-sm">s</span></button>
       <nav class="breadcrumbs" id="breadcrumbs"></nav>
     </div>
     <div class="topbar-group">
-      <button class="btn-nav" id="btnAboutWorkbench" data-about>ℹ️ About</button>
+      <button class="btn-nav" id="btnAboutWorkbench" data-about aria-label="About">ℹ️<span class="hide-xs"> About</span></button>
       <span class="star-pill" id="wb-score">⭐ Score: 0/108</span>
     </div>
   </div>
@@ -1604,7 +1687,7 @@ function updateHeaders() {
   const isl = WORLD_ISLANDS[APP_STATE.currentIslandId - 1];
   $('island-title').textContent = `${isl.icon} Island ${isl.id}: ${isl.name}`;
   $('island-stars').textContent = `Stars: ⭐ ${islandStars(isl.id)}/9`;
-  $('wb-score').textContent = `⭐ Score: ${APP_STATE.totalStars}/${MAX_STARS}`;
+  $('wb-score').innerHTML = `⭐ <span class="hide-sm">Score: </span>${APP_STATE.totalStars}/${MAX_STARS}`;
   const L = currentLevel();
   const bc = $('breadcrumbs'); bc.innerHTML = '';
   const add = (txt, fn, cls) => { const e = document.createElement(fn ? 'a' : 'span'); e.textContent = txt; if (fn) e.addEventListener('click', fn); if (cls) e.className = cls; bc.appendChild(e); };
@@ -1678,11 +1761,17 @@ function currentFrontierIsland() {
 }
 
 // ---------- World Map Renderer ----------
+// On tall (portrait) screens the archipelago is drawn on a 600x1000 board so islands stay large enough to tap.
+function islandXY(isl) {
+  if (!UI.wmPortrait) return { x: isl.x, y: isl.y };
+  return { x: 70 + (isl.y - 150) / 330 * 460, y: 880 - (isl.x - 120) / 720 * 760 };
+}
 function drawWorldMap() {
   const cv = $('world-map-canvas'), c = fitCanvas(cv); if (!c) return;
   const { ctx, w, h } = c, t = UI.time;
   drawOcean(ctx, w, h, t);
-  const vt = UI.wmT = viewTransform(w, h, 1000, 600, 12);
+  UI.wmPortrait = h > w * 1.15;
+  const vt = UI.wmT = UI.wmPortrait ? viewTransform(w, h, 600, 1000, 8) : viewTransform(w, h, 1000, 600, 12);
   ctx.save(); ctx.translate(vt.ox, vt.oy); ctx.scale(vt.s, vt.s);
   // title card
   ctx.fillStyle = 'rgba(10,12,28,0.6)'; roundRect(ctx, 14, 14, 364, 62, 12); ctx.fill();
@@ -1691,12 +1780,12 @@ function drawWorldMap() {
   ctx.fillStyle = '#9ab'; ctx.font = '600 13px Segoe UI, system-ui, sans-serif';
   ctx.fillText(`Islands unlocked: ${APP_STATE.unlockedIslands.length}/12  ·  Click an island to explore`, 28, 63);
   // compass
-  ctx.save(); ctx.translate(950, 548); ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.stroke();
+  ctx.save(); ctx.translate(UI.wmPortrait ? 50 : 950, UI.wmPortrait ? 950 : 548); ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.moveTo(0, -22); ctx.lineTo(6, 0); ctx.lineTo(0, 22); ctx.lineTo(-6, 0); ctx.fill();
   ctx.font = '700 11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('N', 0, -30); ctx.restore();
   // shipping routes
   for (let i = 0; i < 11; i++) {
-    const a = WORLD_ISLANDS[i], b = WORLD_ISLANDS[i + 1], open = isIslandUnlocked(b.id);
+    const a = islandXY(WORLD_ISLANDS[i]), b = islandXY(WORLD_ISLANDS[i + 1]), open = isIslandUnlocked(WORLD_ISLANDS[i + 1].id);
     const mx = (a.x + b.x) / 2 + (b.y - a.y) * 0.22, my = (a.y + b.y) / 2 - (b.x - a.x) * 0.22;
     ctx.setLineDash([9, 9]); ctx.lineDashOffset = open ? -t * 22 : 0; ctx.lineWidth = open ? 4 : 3;
     ctx.strokeStyle = open ? '#00ff88' : 'rgba(255,255,255,0.32)';
@@ -1709,7 +1798,7 @@ function drawWorldMap() {
   const frontier = currentFrontierIsland();
   for (const isl of WORLD_ISLANDS) {
     const unlocked = isIslandUnlocked(isl.id), complete = isIslandComplete(isl.id), hover = UI.hoverIsland === isl.id;
-    const bob = Math.sin(t * 1.4 + isl.id) * 2, sc = hover ? 1.09 : 1, r = 46 * sc, cx = isl.x, cy = isl.y + bob;
+    const bob = Math.sin(t * 1.4 + isl.id) * 2, sc = hover ? 1.09 : 1, r = 46 * sc, pos = islandXY(isl), cx = pos.x, cy = pos.y + bob;
     const pts = blobPoints(isl.id, 16, 0.42);
     ctx.fillStyle = 'rgba(0,0,0,0.28)'; blobPath(ctx, pts, cx + 4, cy + 8, r * 1.25, r * 0.95); ctx.fill();
     ctx.fillStyle = 'rgba(90,200,255,0.22)'; blobPath(ctx, pts, cx, cy, r * 1.42, r * 1.1); ctx.fill();
@@ -1748,48 +1837,61 @@ function drawWorldMap() {
     }
   }
   // boat at the frontier island
-  const fi = WORLD_ISLANDS[frontier - 1];
+  const fi = islandXY(WORLD_ISLANDS[frontier - 1]);
   ctx.font = '26px Segoe UI Emoji, Apple Color Emoji, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('⛵', fi.x - 64, fi.y + 26 + Math.sin(t * 2.2) * 3);
+  ctx.fillText('⛵', fi.x > 150 ? fi.x - 64 : fi.x + 70, fi.y + 26 + Math.sin(t * 2.2) * 3);
   ctx.restore();
 }
 function renderWorldMapCanvas() { drawWorldMap(); }
 
 // ---------- Island Sub-stage Renderer ----------
 const NODE_POS = [{ x: 230, y: 410 }, { x: 500, y: 300 }, { x: 770, y: 410 }];
+const NODE_POS_PORTRAIT = [{ x: 180, y: 850 }, { x: 420, y: 610 }, { x: 180, y: 370 }];
+function nodePositions() { return UI.ivPortrait ? NODE_POS_PORTRAIT : NODE_POS; }
 function drawIslandView() {
   const cv = $('island-canvas'), c = fitCanvas(cv); if (!c) return;
   const { ctx, w, h } = c, t = UI.time, isl = WORLD_ISLANDS[APP_STATE.currentIslandId - 1];
+  const portrait = UI.ivPortrait = h > w * 1.15;
   drawOcean(ctx, w, h, t);
-  const vt = UI.ivT = viewTransform(w, h, 1000, 600, 10);
+  const vt = UI.ivT = portrait ? viewTransform(w, h, 600, 1000, 6) : viewTransform(w, h, 1000, 600, 10);
   ctx.save(); ctx.translate(vt.ox, vt.oy); ctx.scale(vt.s, vt.s);
+  const C = portrait ? { x: 300, y: 590, rx: 295, ry: 400 } : { x: 500, y: 345, rx: 470, ry: 265 };
+  const NP = nodePositions(), HX = portrait ? 300 : 500;
   const pts = blobPoints(100 + isl.id, 26, 0.28);
-  ctx.fillStyle = 'rgba(90,200,255,0.2)'; blobPath(ctx, pts, 500, 345, 470, 265); ctx.fill();
-  ctx.fillStyle = '#ecd595'; blobPath(ctx, pts, 500, 345, 445, 245); ctx.fill();
-  const g = ctx.createRadialGradient(440, 280, 30, 500, 345, 440); g.addColorStop(0, '#5fd36f'); g.addColorStop(1, '#22803a');
-  ctx.fillStyle = g; blobPath(ctx, pts, 500, 345, 412, 218); ctx.fill();
+  ctx.fillStyle = 'rgba(90,200,255,0.2)'; blobPath(ctx, pts, C.x, C.y, C.rx, C.ry); ctx.fill();
+  ctx.fillStyle = '#ecd595'; blobPath(ctx, pts, C.x, C.y, C.rx * 0.947, C.ry * 0.925); ctx.fill();
+  const g = ctx.createRadialGradient(C.x - C.rx * 0.128, C.y - C.ry * 0.245, 30, C.x, C.y, Math.max(C.rx, C.ry) * 0.936); g.addColorStop(0, '#5fd36f'); g.addColorStop(1, '#22803a');
+  ctx.fillStyle = g; blobPath(ctx, pts, C.x, C.y, C.rx * 0.877, C.ry * 0.823); ctx.fill();
   ctx.globalAlpha = 0.12; ctx.font = '170px Segoe UI Emoji, Apple Color Emoji, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(isl.icon, 500, 350); ctx.globalAlpha = 1;
+  ctx.fillText(isl.icon, C.x, C.y + 5); ctx.globalAlpha = 1;
   const rng = mulberry32(isl.id * 101);
   for (let k = 0; k < 9; k++) {
-    const a = rng() * Math.PI * 2, d = 0.55 + rng() * 0.35, px = 500 + Math.cos(a) * 380 * d, py = 345 + Math.sin(a) * 195 * d;
-    if (NODE_POS.some(n => Math.hypot(n.x - px, n.y - py) < 90)) continue;
+    const a = rng() * Math.PI * 2, d = 0.55 + rng() * 0.35, px = C.x + Math.cos(a) * C.rx * 0.809 * d, py = C.y + Math.sin(a) * C.ry * 0.736 * d;
+    if (NP.some(n => Math.hypot(n.x - px, n.y - py) < 90 || (Math.abs(n.x - px) < 110 && py > n.y && py < n.y + 140))) continue;
     drawPalm(ctx, px, py, 1.1, t);
   }
   // header card
-  ctx.fillStyle = 'rgba(10,12,28,0.78)'; roundRect(ctx, 250, 18, 500, 74, 14); ctx.fill(); ctx.strokeStyle = '#00d4ff55'; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.font = '800 21px Segoe UI, system-ui, sans-serif'; ctx.fillText(`${isl.icon} Island ${isl.id} - ${isl.name}`, 500, 44);
-  ctx.fillStyle = '#9fb3d1'; ctx.font = '600 13px Segoe UI, system-ui, sans-serif'; ctx.fillText(`${isl.concept}: ${isl.desc}`, 500, 72, 480);
+  ctx.fillStyle = 'rgba(10,12,28,0.78)';
+  if (portrait) roundRect(ctx, 16, 14, 568, 96, 14); else roundRect(ctx, 250, 18, 500, 74, 14);
+  ctx.fill(); ctx.strokeStyle = '#00d4ff55'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = '800 21px Segoe UI, system-ui, sans-serif'; ctx.fillText(`${isl.icon} Island ${isl.id} - ${isl.name}`, HX, portrait ? 42 : 44);
+  ctx.fillStyle = '#9fb3d1'; ctx.font = '600 13px Segoe UI, system-ui, sans-serif';
+  if (portrait) { ctx.fillText(isl.concept, HX, 72, 540); ctx.fillText(isl.desc, HX, 94, 540); }
+  else ctx.fillText(`${isl.concept}: ${isl.desc}`, HX, 72, 480);
   // path between nodes
-  const segPath = (a, b) => { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo((a.x + b.x) / 2, Math.min(a.y, b.y) - 50 + (a.y > b.y ? 40 : -10), b.x, b.y); };
+  const segPath = (a, b) => {
+    ctx.beginPath(); ctx.moveTo(a.x, a.y);
+    if (portrait) ctx.quadraticCurveTo((a.x + b.x) / 2 + (b.x > a.x ? 70 : -70), (a.y + b.y) / 2 + 40, b.x, b.y);
+    else ctx.quadraticCurveTo((a.x + b.x) / 2, Math.min(a.y, b.y) - 50 + (a.y > b.y ? 40 : -10), b.x, b.y);
+  };
   for (let k = 0; k < 2; k++) {
-    const a = NODE_POS[k], b = NODE_POS[k + 1], done = subStars(`${isl.id}.${k + 1}`) >= 1;
+    const a = NP[k], b = NP[k + 1], done = subStars(`${isl.id}.${k + 1}`) >= 1;
     ctx.lineCap = 'round'; ctx.lineWidth = 20; ctx.strokeStyle = '#c9a46a'; segPath(a, b); ctx.stroke();
     ctx.lineWidth = 4; ctx.setLineDash([10, 12]); ctx.lineDashOffset = done ? -t * 20 : 0; ctx.strokeStyle = done ? '#00ff88' : 'rgba(255,255,255,0.55)'; segPath(a, b); ctx.stroke(); ctx.setLineDash([]);
   }
   // nodes
   for (let k = 0; k < 3; k++) {
-    const id = `${isl.id}.${k + 1}`, L = SUBSTAGE_DATA[id], st = subStars(id), unlocked = isSubUnlocked(id), p = NODE_POS[k];
+    const id = `${isl.id}.${k + 1}`, L = SUBSTAGE_DATA[id], st = subStars(id), unlocked = isSubUnlocked(id), p = NP[k];
     const state = st >= 1 ? 'done' : unlocked ? 'current' : 'locked', hover = UI.hoverNode === k;
     const R = hover ? 40 : 36;
     ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(p.x + 3, p.y + R * 0.9, R * 0.9, 10, 0, 0, Math.PI * 2); ctx.fill();
@@ -2327,6 +2429,7 @@ function initDragAndDrop() {
     window.addEventListener('mousemove', e => { if (DD.p) ddMove(e.clientX, e.clientY); });
     window.addEventListener('mouseup', () => { if (DD.p) ddEnd(); });
   }
+  document.addEventListener('contextmenu', e => { if (e.target instanceof Element && e.target.closest('.blk, canvas')) e.preventDefault(); });
   const ws = $('workspace-area');
   ws.addEventListener('input', e => { if (e.target.classList.contains('blk-in')) { if (e.target.tagName === 'INPUT') sizeInput(e.target); onProgramChanged(); } });
   ws.addEventListener('change', e => {
@@ -2352,6 +2455,9 @@ function initSubstagePuzzle(subId) {
   $('obj-name').textContent = L.title;
   $('obj-goal').textContent = L.text;
   $('console-output').innerHTML = '';
+  if (window.matchMedia && matchMedia('(max-width: 600px), (max-height: 500px)').matches) { // small screens: keep the map visible
+    $('objective-box').classList.add('collapsed'); $('obj-toggle').textContent = '▸ show';
+  }
   consoleLog(`🏝 Island ${L.island}: ${WORLD_ISLANDS[L.island - 1].name} - Sub-stage ${L.id} "${L.title}"`, 'info');
   consoleLog('🎯 ' + L.goal);
   if (L.mazeSeeds && L.mazeSeeds.length > 1) consoleLog(`🧩 Your program will be tested on ${L.mazeSeeds.length} different mazes.`, 'info');
@@ -2697,12 +2803,12 @@ function bindOverlays() {
 // ==========================================
 function bindCanvasNav() {
   const wm = $('world-map-canvas'), iv = $('island-canvas');
-  const hitIsland = e => { if (!UI.wmT) return null; const p = toLogical(wm, UI.wmT, e); const f = WORLD_ISLANDS.find(i => Math.hypot((p.x - i.x) / 1.15, p.y - i.y) < 56); return f ? f.id : null; };
+  const hitIsland = e => { if (!UI.wmT) return null; const p = toLogical(wm, UI.wmT, e); const f = WORLD_ISLANDS.find(i => { const q = islandXY(i); return Math.hypot((p.x - q.x) / 1.15, p.y - q.y) < 56; }); return f ? f.id : null; };
   const overlayOpen = () => BRIEF.open || aboutOpen;
   wm.addEventListener('pointermove', e => { if (overlayOpen()) return; UI.hoverIsland = hitIsland(e); wm.style.cursor = UI.hoverIsland ? 'pointer' : 'default'; });
   wm.addEventListener('pointerleave', () => { UI.hoverIsland = null; });
   wm.addEventListener('click', e => { if (overlayOpen()) return; const id = hitIsland(e); if (id) selectIsland(id); });
-  const hitNode = e => { if (!UI.ivT) return null; const p = toLogical(iv, UI.ivT, e); const k = NODE_POS.findIndex(n => Math.hypot(p.x - n.x, p.y - n.y) < 46 || (Math.abs(p.x - n.x) < 95 && p.y > n.y + 40 && p.y < n.y + 120)); return k >= 0 ? k : null; };
+  const hitNode = e => { if (!UI.ivT) return null; const p = toLogical(iv, UI.ivT, e); const k = nodePositions().findIndex(n => Math.hypot(p.x - n.x, p.y - n.y) < 46 || (Math.abs(p.x - n.x) < 95 && p.y > n.y + 40 && p.y < n.y + 120)); return k >= 0 ? k : null; };
   iv.addEventListener('pointermove', e => { if (overlayOpen()) return; UI.hoverNode = hitNode(e); iv.style.cursor = UI.hoverNode != null ? 'pointer' : 'default'; });
   iv.addEventListener('pointerleave', () => { UI.hoverNode = null; });
   iv.addEventListener('click', e => { if (overlayOpen()) return; const k = hitNode(e); if (k != null) launchSubstage(`${APP_STATE.currentIslandId}.${k + 1}`); });
@@ -2752,6 +2858,10 @@ function bindControls() {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && APP_STATE.currentView === 'WORKBENCH') runProgram();
   });
 }
+function updateLayoutVars() { // lets the tabletop-fold layout put the puzzle exactly on the top screen
+  const h = $('nav-header').offsetHeight;
+  if (h) document.documentElement.style.setProperty('--wb-header-h', h + 'px');
+}
 function frameLoop(ts) {
   const dt = UI.last ? Math.min(0.05, (ts - UI.last) / 1000) : 0.016; UI.last = ts; UI.time += dt;
   try {
@@ -2767,6 +2877,8 @@ function boot() {
   APP_STATE.currentView = 'WORLD_MAP';
   updateHeaders(); renderWorldMapCanvas();
   requestAnimationFrame(frameLoop);
+  updateLayoutVars(); window.addEventListener('resize', updateLayoutVars);
+  if (window.ResizeObserver) new ResizeObserver(updateLayoutVars).observe($('nav-header'));
   if (!hasSeenBriefing()) showBriefing(); // first launch on this device
 }
 boot();
