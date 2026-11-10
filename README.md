@@ -23,7 +23,7 @@ Created by **Khiew Tzong Yong**, School of EIT, ITE College West.
 ## How to play
 
 1. **Captain's Briefing.** The first time the app is opened on a device, Captain Algo explains Computational Thinking in 8 short pages. You can replay the briefing at any time from **ℹ️ About**.
-2. **World Map.** Click an unlocked island. Locked islands show 🔒.
+2. **World Map.** Click an unlocked island. Locked islands show 🔒. Hover over any island (or long-press it on a touch screen) to see Captain Algo explain that island's objective and learning outcome.
 3. **Island View.** Choose a sub-stage: **.1 Intro**, **.2 Pattern** or **.3 Mastery**.
 4. **Workbench.** Drag blocks from the palette into the program area, or tap a palette block to add it. Then press **▶ Run Code** and watch the agent follow your instructions.
 5. **Fix and retry.** If something goes wrong, read the console at the bottom right, change your blocks and run again.

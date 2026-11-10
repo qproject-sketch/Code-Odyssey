@@ -307,6 +307,28 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 }
 @media (prefers-reduced-motion: reduce) { .cap-svg, .cap-eye, .brief-talking .cap-mouth { animation: none; } }
 
+/* ── Island hover tip: Captain Algo explains each island (tip-) ── */
+#world-map-canvas { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+#island-tip { position: fixed; left: 0; top: 0; z-index: 1500; width: 320px; max-width: calc(100vw - 16px); display: flex; gap: 8px; align-items: flex-start; pointer-events: none; opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s; }
+#island-tip.show { opacity: 1; visibility: visible; transform: none; transition: opacity .18s ease, transform .18s ease, visibility 0s; }
+#island-tip.flip { flex-direction: row-reverse; }
+.tip-captain { width: 60px; flex-shrink: 0; margin-top: 2px; filter: drop-shadow(0 6px 10px rgba(0,0,0,.45)); }
+.tip-captain svg { display: block; width: 100%; height: auto; overflow: visible; }
+.tip-bubble { position: relative; flex: 1; min-width: 0; background: rgba(10,12,28,.97); border: 1px solid #00d4ff66; border-radius: 12px; padding: 10px 12px 11px; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
+.tip-bubble::before { content: ''; position: absolute; left: -9px; top: 22px; border: 9px solid transparent; border-left: 0; border-right-color: #00d4ff66; }
+.tip-bubble::after { content: ''; position: absolute; left: -7px; top: 23px; border: 8px solid transparent; border-left: 0; border-right-color: rgba(10,12,28,.97); }
+#island-tip.flip .tip-bubble::before { left: auto; right: -9px; border: 9px solid transparent; border-right: 0; border-left-color: #00d4ff66; }
+#island-tip.flip .tip-bubble::after { left: auto; right: -7px; border: 8px solid transparent; border-right: 0; border-left-color: rgba(10,12,28,.97); }
+#island-tip.below .tip-bubble::before, #island-tip.below .tip-bubble::after { display: none; }
+.tip-head { font-size: 10px; color: #8890b0; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+.tip-title { color: #00d4ff; font-weight: 800; font-size: 15px; margin-top: 2px; line-height: 1.3; }
+.tip-concept { color: #aab4d8; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.tip-label { color: #ffd700; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; margin-top: 7px; }
+.tip-text { font-size: 13px; line-height: 1.45; color: #e0e0ff; margin-top: 1px; }
+.tip-status { margin-top: 8px; padding-top: 7px; border-top: 1px solid #ffffff14; font-size: 12px; font-weight: 700; color: #00ff88; }
+.tip-status.locked { color: #ff9f9f; }
+@media (prefers-reduced-motion: reduce) { #island-tip, #island-tip.show { transition: none; transform: none; } }
+
 /* Narrow screens (phones / iPad split view) */
 @media (max-width: 760px) {
   #workbench-body { flex-direction: column; }
@@ -413,6 +435,19 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
     </div>
   </div>
   <canvas id="world-map-canvas" aria-label="World map with 12 islands"></canvas>
+  <div id="island-tip" role="tooltip" aria-live="polite">
+    <div class="tip-captain" id="tip-captain" aria-hidden="true"></div>
+    <div class="tip-bubble">
+      <div class="tip-head">Captain Algo says…</div>
+      <div class="tip-title" id="tip-title"></div>
+      <div class="tip-concept" id="tip-concept"></div>
+      <div class="tip-label">🎯 Objective</div>
+      <div class="tip-text" id="tip-objective"></div>
+      <div class="tip-label">🎓 Learning outcome</div>
+      <div class="tip-text" id="tip-outcome"></div>
+      <div class="tip-status" id="tip-status"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ============ VIEW 2: ISLAND SUB-STAGE MAP ============ -->
@@ -1645,6 +1680,7 @@ const currentLevel = () => SUBSTAGE_DATA[APP_STATE.currentSubstageId];
 const $ = id => document.getElementById(id);
 
 function setActiveScreen(id) {
+  hideIslandTip();
   if (BRIEF.open) hideBriefing(false);
   hideAbout();
   ['screen-world-map', 'screen-island', 'screen-workbench'].forEach(s => $(s).classList.toggle('active', s === id));
@@ -2695,6 +2731,7 @@ function stopBriefTyping() {
   $('brief-captain').classList.remove('brief-talking');
 }
 function showBriefing() {
+  hideIslandTip();
   hideVictory(); hideAbout();
   BRIEF.open = true;
   $('briefing-overlay').classList.add('show');
@@ -2741,6 +2778,7 @@ function briefingBack() { if (BRIEF.page > 0) renderBriefingPage(BRIEF.page - 1)
 function briefingSkip() { hideBriefing(true); }
 
 function showAbout() {
+  hideIslandTip();
   if (RUN.running) stopProgram();
   hideVictory(); if (BRIEF.open) hideBriefing(false);
   renderAbout();
@@ -2788,6 +2826,70 @@ function renderAbout() { // rebuilt every time About opens so the figures are cu
     <div class="about-foot">Created by <b>${escapeHtml(APP_AUTHOR)}</b>, ${escapeHtml(APP_CREDIT)}.<br>Developed for learners at ${escapeHtml(APP_CREDIT)}. Built as a single-file web app – works offline and on iPad.</div>`;
   $('btnReplayBriefing').addEventListener('click', () => { hideAbout(); showBriefing(); });
 }
+// ---------- Island tips: Captain Algo explains each island on hover (long-press on touch) ----------
+const ISLAND_BRIEFS = {
+  1:  { objective: 'Guide your agent one step at a time: move, turn, collect gems, defeat a guard and unlock the castle door.',
+        outcome: 'Break a task into an exact, ordered sequence of commands (decomposition).' },
+  2:  { objective: 'Bundle repeated moves into your own named functions, then call them to clear corridors, corners and twin towers.',
+        outcome: 'Use abstraction: name a group of steps once and reuse it whenever you need it.' },
+  3:  { objective: 'Use Repeat blocks to walk a path, circle a garden and climb a staircase with far fewer blocks.',
+        outcome: 'Spot patterns and replace repeated code with a fixed-count loop.' },
+  4:  { objective: 'Let your agent sense each tile and decide – move or turn, gem or switch – even when the map changes every run.',
+        outcome: 'Write If / Else decisions so a program reacts to what it finds.' },
+  5:  { objective: 'Combine sensors with AND, OR and NOT to cross a safe path, grab mixed items and dodge a minefield.',
+        outcome: 'Build compound conditions and predict when they are true or false.' },
+  6:  { objective: 'Keep going until something changes: walk to a wall, search for a hidden gem and run a twisting maze.',
+        outcome: "Use condition-controlled loops when you don't know how many steps are needed." },
+  7:  { objective: 'Follow the wall, spiral to every gem and escape three different mazes with a single program.',
+        outcome: 'Design and test a general algorithm that works on many different inputs.' },
+  8:  { objective: 'Count gems, track the steps left and build a score high enough to open the vault.',
+        outcome: "Store, update and compare data in variables to track a program's state." },
+  9:  { objective: "Change your agent's speed and shield colour, then control two agents with different properties.",
+        outcome: 'Understand objects and properties, and how changing a value changes behaviour.' },
+  10: { objective: 'Give functions inputs: move any distance, walk sides of any colour and pick the right weapon for each guard.',
+        outcome: 'Write flexible functions with parameters, so one function solves many cases.' },
+  11: { objective: 'Use x and y coordinates to build bridges, place portals and construct your own route to the flag.',
+        outcome: 'Use coordinates and commands to change the environment a program runs in.' },
+  12: { objective: 'Loop through lists of coordinates, filter out cursed silver gems and sort waypoints by distance.',
+        outcome: 'Iterate over, filter and sort collections of data.' }
+};
+const TIP = { id: null, mode: null }; // mode: 'hover' (mouse / pen) or 'touch' (long-press)
+function showIslandTip(islandId, mode) {
+  const tip = $('island-tip'), isl = WORLD_ISLANDS[islandId - 1], brief = ISLAND_BRIEFS[islandId];
+  if (!isl || !brief || !UI.wmT || BRIEF.open || aboutOpen) return;
+  if (!$('tip-captain').firstChild) $('tip-captain').innerHTML = CAPTAIN_SVG;
+  const unlocked = isIslandUnlocked(islandId), stars = islandStars(islandId), verb = mode === 'touch' ? 'Tap' : 'Click';
+  $('tip-title').textContent = `${isl.icon} Island ${isl.id} · ${isl.name}`;
+  $('tip-concept').textContent = isl.concept;
+  $('tip-objective').textContent = brief.objective;
+  $('tip-outcome').textContent = brief.outcome;
+  const st = $('tip-status');
+  st.textContent = !unlocked ? `🔒 Locked – clear Island ${islandId - 1} to unlock`
+    : isIslandComplete(islandId) ? `✅ Island complete · ⭐ ${stars}/9 · ${verb} to replay`
+    : `⭐ ${stars}/9 · ${verb} to set sail`;
+  st.classList.toggle('locked', !unlocked);
+  // Position beside the island (right side preferred), flipping or dropping below when space runs out
+  const cv = $('world-map-canvas'), r = cv.getBoundingClientRect(), vt = UI.wmT, P = islandXY(isl);
+  const sx = r.left + vt.ox + P.x * vt.s, sy = r.top + vt.oy + P.y * vt.s, rr = 46 * 1.25 * vt.s, gap = 8, M = 8;
+  tip.classList.remove('flip', 'below');
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  let left = sx + rr + gap, top = sy - 34;
+  if (left + tw > innerWidth - M) { left = sx - rr - gap - tw; tip.classList.add('flip'); }
+  if (left < M) { // no room at either side (narrow phones): centre it above or below the island
+    tip.classList.remove('flip'); tip.classList.add('below');
+    left = Math.min(Math.max(M, sx - tw / 2), innerWidth - tw - M);
+    top = sy + rr * 0.8 + th + gap < innerHeight - M ? sy + rr * 0.8 + gap : sy - rr * 0.8 - th - gap;
+  }
+  top = Math.min(Math.max(M, top), innerHeight - th - M);
+  tip.style.left = Math.round(left) + 'px'; tip.style.top = Math.round(top) + 'px';
+  if (TIP.id !== islandId) { tip.classList.remove('show'); void tip.offsetWidth; } // restart the fade for a new island
+  tip.classList.add('show');
+  TIP.id = islandId; TIP.mode = mode;
+}
+function hideIslandTip() {
+  $('island-tip').classList.remove('show');
+  TIP.id = null; TIP.mode = null;
+}
 function bindOverlays() {
   $('brief-captain').innerHTML = CAPTAIN_SVG;
   $('briefNext').addEventListener('click', briefingNext);
@@ -2805,9 +2907,30 @@ function bindCanvasNav() {
   const wm = $('world-map-canvas'), iv = $('island-canvas');
   const hitIsland = e => { if (!UI.wmT) return null; const p = toLogical(wm, UI.wmT, e); const f = WORLD_ISLANDS.find(i => { const q = islandXY(i); return Math.hypot((p.x - q.x) / 1.15, p.y - q.y) < 56; }); return f ? f.id : null; };
   const overlayOpen = () => BRIEF.open || aboutOpen;
-  wm.addEventListener('pointermove', e => { if (overlayOpen()) return; UI.hoverIsland = hitIsland(e); wm.style.cursor = UI.hoverIsland ? 'pointer' : 'default'; });
-  wm.addEventListener('pointerleave', () => { UI.hoverIsland = null; });
-  wm.addEventListener('click', e => { if (overlayOpen()) return; const id = hitIsland(e); if (id) selectIsland(id); });
+  // Hover (mouse / pen): Captain Algo's island tip fades in; touch: long-press shows it, a normal tap still opens the island
+  let longPress = null, suppressClick = false;
+  const cancelLongPress = () => { if (longPress) { clearTimeout(longPress.timer); longPress = null; } };
+  wm.addEventListener('pointermove', e => {
+    if (overlayOpen()) return;
+    const id = hitIsland(e);
+    if (longPress && Math.hypot(e.clientX - longPress.x, e.clientY - longPress.y) > 10) cancelLongPress();
+    if (id !== UI.hoverIsland && e.pointerType !== 'touch') { if (id) showIslandTip(id, 'hover'); else hideIslandTip(); }
+    UI.hoverIsland = id; wm.style.cursor = id ? 'pointer' : 'default';
+  });
+  wm.addEventListener('pointerleave', () => { UI.hoverIsland = null; cancelLongPress(); if (TIP.mode === 'hover') hideIslandTip(); });
+  wm.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'touch' || overlayOpen()) return;
+    hideIslandTip(); cancelLongPress();
+    const id = hitIsland(e); if (!id) return;
+    longPress = { x: e.clientX, y: e.clientY, timer: setTimeout(() => { longPress = null; suppressClick = true; showIslandTip(id, 'touch'); }, 450) };
+  });
+  wm.addEventListener('pointerup', cancelLongPress);
+  wm.addEventListener('pointercancel', cancelLongPress);
+  wm.addEventListener('click', e => {
+    if (suppressClick) { suppressClick = false; return; } // the long-press only shows the tip
+    if (overlayOpen()) return; const id = hitIsland(e); if (id) selectIsland(id);
+  });
+  window.addEventListener('resize', hideIslandTip);
   const hitNode = e => { if (!UI.ivT) return null; const p = toLogical(iv, UI.ivT, e); const k = nodePositions().findIndex(n => Math.hypot(p.x - n.x, p.y - n.y) < 46 || (Math.abs(p.x - n.x) < 95 && p.y > n.y + 40 && p.y < n.y + 120)); return k >= 0 ? k : null; };
   iv.addEventListener('pointermove', e => { if (overlayOpen()) return; UI.hoverNode = hitNode(e); iv.style.cursor = UI.hoverNode != null ? 'pointer' : 'default'; });
   iv.addEventListener('pointerleave', () => { UI.hoverNode = null; });
