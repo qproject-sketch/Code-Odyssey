@@ -15,7 +15,7 @@ Created by **Khiew Tzong Yong**, School of EIT, ITE College West.
 | Goal | What to do |
 | --- | --- |
 | Play locally | Double-click `index.html` to open it in Chrome, Edge, Safari or Firefox. It works offline from `file://`. |
-| Host on GitHub Pages | Commit `index.html` to the repository root, then go to **Settings → Pages → Source: main branch / (root)**. The game is then at `https://<username>.github.io/<repository-name>/`. |
+| Host on GitHub Pages | Commit `index.html` (and the empty `.nojekyll`) to the repository root, then go to **Settings → Pages → Source: main branch / (root)**. The game is then at `https://<username>.github.io/<repository-name>/`. For a gated deploy of `index.html` only, see `docs/DEPLOY-GITHUB-PAGES.md`. |
 | Install on an iPad Home Screen | Open the hosted page in Safari, tap **Share → Add to Home Screen**. It appears as "Code Odyssey". |
 
 ---
@@ -33,8 +33,10 @@ Created by **Khiew Tzong Yong**, School of EIT, ITE College West.
 | Stars | How to earn them |
 | --- | --- |
 | ⭐ | Clear all of the puzzle's objectives |
-| ⭐⭐ | Also stay within the target number of steps |
-| ⭐⭐⭐ | Also use no more than the optimal number of blocks |
+| +⭐ | Stay within the step target (the reference solution's steps on the same map) |
+| +⭐ | Use no more than the block target (the reference solution's block count) |
+
+The two bonus stars are separate, so 2 stars can come from either one. If a step target is unavailable on a map, that star is not awarded and your earlier best is kept.
 
 Clearing all 3 sub-stages on an island unlocks the next island. There are **108 stars** to collect in total.
 
@@ -45,7 +47,10 @@ Clearing all 3 sub-stages on an island unlocks the next island. There are **108 
 - **Nesting:** Repeat, While, If, If-Else, Define and For Each blocks have slots that can hold other blocks.
 - **Deleting a block:** drag it back onto the palette.
 - **Speed slider:** 🐢 to 🐇 sets how fast the agent moves.
-- **💡 Hint:** the first tap shows a hint in the console. The second tap offers to load the reference 3-star solution. Teachers may find this useful; students can use it too.
+- **💡 Hint:** three steps, one per tap: (1) understand the goal, (2) a strategy for this stage, (3) the Captain's hint. After step 3 you can choose to load the reference solution; **↶ Restore my blocks** puts your own program back. Stars are only awarded when a program is run and meets every goal.
+- **🌊 Calm mode:** About → Display. Turns off particles, shaking, pulsing and typewriter text. Captain Algo, the sea and all stars stay.
+- **After each clear:** the victory screen names the next coding challenge, says when you beat your personal best, and lists which bonus stars a replay could still earn.
+- **🔍 Help panel:** when a run fails, the panel under your program explains what happened, which goal is not met yet, why, and what to try next. The block involved is outlined in red.
 - **Coordinates:** tile numbers run along the top and left edges of the map. You need them on the World Build and Arrays islands.
 
 ### Keyboard shortcuts
@@ -55,7 +60,12 @@ Clearing all 3 sub-stages on an island unlocks the next island. There are **108 
 | `Ctrl` / `Cmd` + `Enter` | Run the program (Workbench) |
 | `→` or `Enter` | Next page (briefing) |
 | `←` | Previous page (briefing) |
-| `Esc` | Skip the briefing, or close About or the victory window |
+| `Esc` | Skip the briefing, or close About, the victory window or the help panel |
+| `Tab`, then arrow keys + `Enter` | Choose and open an island or sub-stage without a mouse |
+| `Enter` / `Shift`+`Enter` on a palette block | Add it after the selected block / inside the selected loop or If |
+| `↑` `↓`, `Shift`+arrows, `Delete` on a program block | Select, move (into or out of loops), delete |
+
+The full keyboard and accessibility guide is in `docs/ACCESSIBILITY.md`.
 
 ---
 
@@ -114,7 +124,7 @@ All settings are inside `index.html` and can be edited with any text editor.
 
 In `SUBSTAGE_DATA`, each level's map is 12 rows of 16 characters. The legend is in the comment above it. Each level's reference solution:
 - is written in a short text format, for example `repeat(4) { move(3) right }`
-- sets that level's ⭐⭐ and ⭐⭐⭐ targets.
+- sets that level's step-efficiency and block-efficiency star targets.
 
 If you change a map, check that its reference solution still clears it.
 
@@ -172,3 +182,9 @@ Testing used emulation only. Before relying on a specific model in class, check 
 Designed and created by **Khiew Tzong Yong**, School of EIT, ITE College West.
 
 All graphics, including Captain Algo, are drawn in code with HTML5 Canvas, inline SVG and CSS. The app uses no external images, fonts, audio or libraries.
+
+---
+
+## Project documentation
+
+Rubric audit and evidence: `docs/RUBRIC-AUDIT.md` · release notes: `docs/RELEASE.md` · deployment: `docs/DEPLOY-GITHUB-PAGES.md` · learning map: `docs/LEARNING-MAP.md` · accessibility: `docs/ACCESSIBILITY.md` · student pilot plan: `docs/PILOT-PLAN.md` · developer tests: `tests/README.md`.

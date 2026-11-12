@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111428">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -235,6 +235,31 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 #toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); background: #1a1d3a; border: 1px solid #ffd70066; color: #fff; padding: 12px 20px; border-radius: 12px; font-weight: 600; font-size: 14px; opacity: 0; pointer-events: none; transition: all .3s; z-index: 3000; max-width: calc(100vw - 32px); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ── Debugging & hint panel (Stage 03) ── */
+#feedback-panel { flex-shrink: 0; max-height: 38%; overflow-y: auto; background: #0b0e22; border-top: 1px solid #1e2242; border-left: 4px solid #00d4ff; padding: 10px 12px; font-size: 13px; line-height: 1.45; color: #d4d8f0; }
+#feedback-panel.fb-error { border-left-color: #ff6b6b; }
+#feedback-panel.fb-hint { border-left-color: #ffd700; }
+.fb-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+#fb-title { flex: 1; margin: 0; font-size: 14px; font-weight: 800; color: #fff; }
+.fb-close { background: none; border: 1px solid #2a2e54; color: #ccd; border-radius: 8px; min-width: 36px; min-height: 36px; cursor: pointer; font-size: 14px; }
+.fb-close:hover, .fb-close:focus-visible { border-color: #00d4ff; color: #fff; }
+.fb-row { margin-bottom: 4px; }
+.fb-row b { color: #9fb3ff; }
+#fb-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+#fb-actions:empty { display: none; }
+#fb-actions button { padding: 8px 12px; min-height: 40px; font-size: 13px; }
+.v-block.err-block { box-shadow: 0 0 0 3px #ff5555, 0 0 14px #ff5555aa; border-color: #ff5555; }
+.v-tip { margin-top: 10px; text-align: left; background: #1a1630; border: 1px solid #ffd70055; border-radius: 10px; padding: 8px 12px; font-size: 13px; color: #f5e7a1; line-height: 1.45; }
+.v-tip:empty { display: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.fb-more { display: none; background: none; border: 1px solid #2a2e54; color: #9fb3ff; border-radius: 8px; min-height: 36px; padding: 0 10px; cursor: pointer; font-size: 12px; font-weight: 700; }
+/* Small screens: keep the learner's blocks visible - show the title and "Try next" first, details on request */
+@media (max-width: 600px), (max-height: 500px) {
+  #feedback-panel { max-height: 34%; font-size: 12px; padding: 8px 10px; }
+  #feedback-panel.fb-error .fb-more { display: inline-block; }
+  #feedback-panel.fb-error:not(.expanded) .fb-row:not(.fb-key) { display: none; }
+}
+
 /* ── Captain's Briefing (brief-) & About window (about-) ── */
 #briefing-overlay, #about-overlay { position: fixed; inset: 0; background: rgba(3,4,12,.78); display: none; align-items: center; justify-content: center; z-index: 2500; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px; }
 #briefing-overlay.show, #about-overlay.show { display: flex; }
@@ -417,6 +442,83 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
   #victory-overlay, #briefing-overlay, #about-overlay { padding-bottom: calc(100vh - env(viewport-segment-bottom 0 0) + 16px); }
   .victory-card, .brief-card, .about-card { max-height: calc(env(viewport-segment-height 0 0) - 32px); }
 }
+
+/* ── Stage 04: accessibility refinements (same colours and layout) ── */
+/* A clear focus indicator for keyboard users (mouse clicks do not show it: :focus-visible) */
+:focus-visible { outline: 3px solid #ffd700; outline-offset: 2px; }
+.v-block:focus-visible { outline: 3px solid #ffd700; outline-offset: 2px; }
+.blk-in:focus-visible { outline: 2px solid #ffd700; outline-offset: 1px; }
+.v-block.kb-sel { outline: 2px dashed #00d4ff; outline-offset: 3px; }
+/* Same cyan buttons, dark text for WCAG AA contrast (white on #00d4ff was 1.8:1) */
+#btnRun, .btn-primary { color: #04121f; }
+/* Small labels lifted to AA contrast */
+.obj-toggle, .ws-head { color: #a3abcf; }
+.obj-item.done { color: #8a90ad; }
+.cat-tab { color: #9aa3c7; }
+/* Category tabs are real buttons now: reset native button styling */
+.cat-tab { font-family: inherit; background: transparent; border: 0; border-bottom: 2px solid transparent; }
+.cat-tab.empty { opacity: .55; }
+/* Breadcrumbs are buttons styled as links (keyboard-reachable, ≥ 24 px tall) */
+.breadcrumbs .crumb { background: none; border: 0; padding: 4px 2px; min-height: 28px; font: inherit; color: #00d4ff; cursor: pointer; }
+.breadcrumbs .crumb:hover { text-decoration: underline; }
+/* Pointer targets: ≥ 24 px everywhere (WCAG 2.2 AA), ≥ 44 px on touch screens where practicable */
+.btn-nav { min-height: 36px; transition: background .2s, border-color .2s, color .2s; } /* not "all": the focus outline appears instantly */
+.blk-in { min-height: 26px; }
+.speed-ctl input { height: 24px; }
+@media (pointer: coarse) {
+  .btn-nav, .btn-action, .btn-icon, .cat-tab, .btn-primary, .btn-secondary, .fb-close, .fb-more, #fb-actions button, .about-close { min-height: 44px; }
+  .btn-icon, .fb-close, .about-close { min-width: 44px; }
+  .blk-in { min-height: 32px; }
+  .speed-ctl input { height: 44px; }
+  .v-block:not(.chip) { min-height: 44px; }
+  .breadcrumbs .crumb { min-height: 44px; }
+}
+/* ── Stage 07: storage warning ── */
+#storage-warning { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 3500; width: min(560px, calc(100vw - 24px)); display: flex; gap: 12px; align-items: center;
+  background: #2a1d08; border: 1px solid #ffb84d; color: #ffe2b0; border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.4; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+#storage-warning[hidden] { display: none; }
+#storage-warning button { flex-shrink: 0; min-width: 52px; min-height: 40px; border-radius: 8px; border: 1px solid #ffb84d; background: #ffb84d; color: #2a1d08; font-weight: 800; cursor: pointer; }
+/* ── Stage 06: engagement (progress messages, next challenge, calm mode) ── */
+.v-progress { margin-top: 10px; text-align: left; font-size: 13px; line-height: 1.5; color: #d4d8f0; }
+.v-progress:empty { display: none; }
+.v-progress ul { margin: 2px 0 0 18px; padding: 0; }
+.v-pb { color: #ffd98a; font-weight: 800; }
+.v-next { margin-top: 8px; font-size: 13px; color: #c7cdea; line-height: 1.45; }
+.v-next b { color: #7fe3ff; } .v-next-isl { color: #a3abcf; }
+.calm-toggle { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: #c7cdea; line-height: 1.4; cursor: pointer; padding: 6px 0; }
+.calm-toggle input { width: 24px; height: 24px; margin: 0; flex-shrink: 0; accent-color: #00d4ff; }
+html.calm *, html.calm *::before, html.calm *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+/* ── Stage 05: learning alignment ── */
+.obj-toggle { background: none; border: 0; font: inherit; font-size: 11px; cursor: pointer; padding: 2px 4px; min-height: 24px; }
+.learn-card { margin-top: 8px; border-top: 1px solid #ffffff14; padding-top: 6px; font-size: 12px; color: #c7cdea; }
+.learn-card summary { cursor: pointer; color: #9fd8ff; font-weight: 700; min-height: 24px; display: flex; align-items: center; }
+.learn-card p { margin: 4px 0; line-height: 1.4; } .learn-card ul { margin: 2px 0 4px 16px; padding: 0; line-height: 1.4; }
+.learn-card b { color: #fff; }
+#learn-body { max-height: min(42vh, 260px); overflow-y: auto; padding-right: 4px; }
+.v-learned { margin: 10px 0 0; text-align: left; background: #0e2236; border: 1px solid #00d4ff55; border-radius: 10px; padding: 8px 12px; font-size: 13px; line-height: 1.45; color: #d6ecff; }
+.v-learned b { color: #7fe3ff; }
+.v-reflect { margin-top: 10px; text-align: left; font-size: 13px; color: #c7cdea; background: #0a0c1a; border: 1px solid #1e2242; border-radius: 10px; padding: 6px 12px; }
+.v-reflect summary { cursor: pointer; font-weight: 700; color: #ffd98a; min-height: 32px; display: flex; align-items: center; }
+.v-reflect p { margin: 6px 0; line-height: 1.45; }
+.v-reflect details summary { color: #9fd8ff; font-weight: 600; min-height: 28px; }
+.about-isl .ai-name .ai-skill { color: #a3abcf; font-size: 11px; margin-top: 2px; }
+/* Narrow or short screens: keep Run / Reset / speed / Hint / Clear on one row with the larger touch targets */
+@media (max-width: 600px), (max-height: 500px) {
+  #btnRun, #btnReset { min-width: 0; }
+  #workbench-controls { gap: 5px; flex-wrap: nowrap; }
+  .speed-ctl { gap: 2px; font-size: 12px; }
+  .speed-ctl input { width: 44px; }
+}
+/* Keyboard help for the block editor: shown while the block panel has keyboard focus */
+.kb-help { display: none; margin: 0 0 8px; font-size: 12px; line-height: 1.45; color: #c7cdea; background: #11143a; border: 1px solid #2a2e54; border-radius: 8px; padding: 6px 8px; }
+#block-panel:focus-within .kb-help { display: block; }
+.kb-help kbd { font: 700 11px monospace; background: #1e2242; border: 1px solid #3a3f70; border-radius: 4px; padding: 0 4px; }
+/* Canvas companions: visually hidden button lists; keyboard focus is drawn on the canvas itself */
+.canvas-nav { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Reduced motion: keep every state change, drop the movement */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
 </style>
 </head>
 <body>
@@ -434,7 +536,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
       <button class="btn-nav danger" id="btnResetProgress" title="Erase all saved progress">↺ Reset<span class="hide-sm"> Progress</span></button>
     </div>
   </div>
-  <canvas id="world-map-canvas" aria-label="World map with 12 islands"></canvas>
+  <canvas id="world-map-canvas" role="img" aria-label="World map with 12 islands"></canvas>
+  <div id="wm-nav" class="canvas-nav" role="toolbar" aria-label="Islands: use the arrow keys, then Enter to open" data-companion="world-map-canvas"></div>
   <div id="island-tip" role="tooltip" aria-live="polite">
     <div class="tip-captain" id="tip-captain" aria-hidden="true"></div>
     <div class="tip-bubble">
@@ -460,7 +563,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
       <span class="star-pill" id="island-stars">Stars: ⭐ 0/9</span>
     </div>
   </div>
-  <canvas id="island-canvas" aria-label="Island sub-stage map"></canvas>
+  <canvas id="island-canvas" role="img" aria-label="Island sub-stage map"></canvas>
+  <div id="iv-nav" class="canvas-nav" role="toolbar" aria-label="Sub-stages: use the arrow keys, then Enter to open" data-companion="island-canvas"></div>
 </div>
 
 <!-- ============ VIEW 3: PUZZLE WORKBENCH ============ -->
@@ -478,47 +582,59 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
   </div>
   <div id="workbench-body">
     <div id="game-panel">
-      <canvas id="gameCanvas" aria-label="Puzzle grid"></canvas>
+      <canvas id="gameCanvas" role="img" aria-label="Puzzle grid"></canvas>
       <div id="objective-box">
-        <div class="obj-head" id="obj-head"><div class="obj-title" id="obj-title">Objectives</div><span class="obj-toggle" id="obj-toggle">▾ hide</span></div>
-        <div class="obj-body">
+        <div class="obj-head" id="obj-head"><div class="obj-title" id="obj-title">Objectives</div><button type="button" class="obj-toggle" id="obj-toggle" aria-expanded="true" aria-controls="obj-body">▾ hide</button></div>
+        <div class="obj-body" id="obj-body">
           <div class="obj-name" id="obj-name"></div>
           <div class="obj-goal" id="obj-goal"></div>
           <div id="obj-list"></div>
           <div class="obj-data" id="obj-data"></div>
           <div class="obj-meta" id="obj-meta"></div>
+          <details class="learn-card" id="learn-card"><summary>📘 Before you code</summary><div id="learn-body"></div></details>
         </div>
       </div>
       <div id="speech-bubble"></div>
     </div>
     <div id="block-panel">
-      <div id="category-tabs"></div>
-      <div id="block-palette"></div>
+      <div id="category-tabs" role="tablist" aria-label="Block categories"></div>
+      <div id="block-palette" role="tabpanel" aria-label="Block palette"></div>
       <div id="workspace-area">
         <div class="ws-head"><span>🧩 Program</span><span id="block-count">0 blocks</span></div>
+        <p class="kb-help" id="kb-help"><b>Keyboard:</b> in the palette, <kbd>Enter</kbd> adds a block after the selected one; <kbd>Shift</kbd>+<kbd>Enter</kbd> puts it inside the selected loop/If. In the program: <kbd>↑</kbd>/<kbd>↓</kbd> select · <kbd>Shift</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> move · <kbd>Shift</kbd>+<kbd>→</kbd> into the block above · <kbd>Shift</kbd>+<kbd>←</kbd> out · <kbd>Delete</kbd> remove · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> run.</p>
         <div id="program-root" class="block-slot root-slot" data-slot="root" data-hint="Drag blocks here (or tap a palette block to add it)"></div>
       </div>
+      <section id="feedback-panel" hidden aria-labelledby="fb-title">
+        <div class="fb-head"><h2 id="fb-title"></h2><button type="button" class="fb-more" id="fb-more" aria-expanded="false">Details ▾</button><button type="button" class="fb-close" id="fb-close" aria-label="Close help panel">✕</button></div>
+        <div id="fb-body"></div>
+        <div id="fb-actions"></div>
+      </section>
       <div id="workbench-controls">
         <button class="btn-action" id="btnRun">▶ Run Code</button>
         <button class="btn-action" id="btnReset">↺ Reset</button>
         <label class="speed-ctl" title="Execution speed">🐢<input type="range" id="speedSlider" min="1" max="5" step="1" value="3">🐇</label>
-        <button class="btn-icon" id="btnHint" title="Hint">💡</button>
-        <button class="btn-icon" id="btnClear" title="Clear workspace">🗑</button>
+        <button class="btn-icon" id="btnHint" title="Hint (3 steps)" aria-label="Hint, 3 steps">💡</button>
+        <button class="btn-icon" id="btnClear" title="Clear workspace" aria-label="Clear workspace">🗑</button>
       </div>
-      <div id="console-output"></div>
+      <div id="console-output" role="log" aria-live="off" aria-label="Program console"></div>
     </div>
   </div>
 </div>
 
 <!-- ============ VICTORY OVERLAY ============ -->
-<div id="victory-overlay" role="dialog" aria-modal="true">
+<div id="victory-overlay" role="dialog" aria-modal="true" aria-labelledby="v-title" aria-describedby="v-score">
   <div class="victory-card">
     <div class="v-title" id="v-title">Sub-stage Clear!</div>
     <div class="v-sub" id="v-sub"></div>
-    <div class="v-stars"><span class="v-star">⭐</span><span class="v-star">⭐</span><span class="v-star">⭐</span></div>
+    <div class="v-learned" id="v-learned"></div>
+    <div class="v-stars" aria-hidden="true"><span class="v-star">⭐</span><span class="v-star">⭐</span><span class="v-star">⭐</span></div>
     <div class="v-score" id="v-score"></div>
     <div class="v-stats" id="v-stats"></div>
+    <div class="v-progress" id="v-progress"></div>
+    <div class="v-tip" id="v-tip"></div>
+    <details class="v-reflect" id="v-reflect"><summary>🤔 Reflect on your code (optional, not marked)</summary><p id="v-reflect-q"></p><details><summary>Compare with Captain Algo's answer</summary><p id="v-reflect-a"></p></details></details>
     <div class="v-unlock" id="v-unlock"></div>
+    <div class="v-next" id="v-next"></div>
     <div class="v-btns">
       <button class="btn-secondary" id="btnReplay">↻ Replay</button>
       <button class="btn-secondary" id="btnVictoryIsland">🗺 Island Map</button>
@@ -555,6 +671,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
   </div>
 </div>
 <div id="toast"></div>
+<div id="storage-warning" role="status" hidden><span>⚠️ This browser is not saving progress (private browsing or storage blocked). Your stars and programs will be lost when you close this page.</span><button type="button" id="storage-warning-ok">OK</button></div>
+<div id="sr-live" class="sr-only" role="status" aria-live="polite"></div>
 
 <script>
 // ==========================================
@@ -1624,6 +1742,371 @@ const solutionCache = {};
 function solutionAST(level) { return solutionCache[level.id] || (solutionCache[level.id] = parseDSL(level.solution)); }
 // @@ENGINE-END
 
+// @@FEEDBACK-BEGIN  (pure feedback & hint logic: no DOM access. Extra guidance text is stored here, keyed by
+// island / sub-stage id; SUBSTAGE_DATA is never modified. Original L.hint is shown verbatim as hint step 3.)
+const CONCEPT_QUESTIONS = {
+  1: 'What exact sequence of moves and turns gets the agent from the start to the goal?',
+  2: 'Which group of commands happens more than once? Could you name it once and reuse it?',
+  3: 'What is the repeating unit, and how many times does it repeat?',
+  4: 'What should the agent check, and what should it do in each case?',
+  5: 'Which conditions must be true together (AND), either one (OR), or not true (NOT)?',
+  6: 'What condition keeps the agent going, and what makes it become false?',
+  7: 'What general rule would work without knowing the exact map in advance?',
+  8: 'What value do you need to track? Where does it start and how does it change?',
+  9: 'Which property of the agent must change to get past the obstacle?',
+  10: 'What changes between calls? Those values should become parameters.',
+  11: 'Which tiles need building on, and what can be built there?',
+  12: 'What must happen for each item in the list?'
+};
+const STAGE_STRATEGY = {
+  '1.1': 'Count the tiles between the agent and the gem. One Move Forward block can cover several tiles. Which number goes inside it?',
+  '1.2': 'Split the trip into two straight legs with a turn in between. Trace the route on the map first: how long is each leg, and which way is the turn? The gem must be collected while standing on it.',
+  '1.3': 'Break the castle into stages: reach the guard, defeat it, pick up the key, then head for the door and the flag. Attack only hits the tile directly in front of the agent. Run after each stage to check the agent is where you expect.',
+  '2.1': 'Find the pattern that happens twice: walk to a gem, then collect it. Put that pattern inside the Define block once, then Call it once for each gem.',
+  '2.2': 'Every corner needs the same actions. Work out the actions for the first corner only, put them inside cleanCorner, then decide how many times to call it.',
+  '2.3': 'There are two repeated jobs: going up a tower, and collecting the gem then coming back down. Give each job its own function and use ordinary moves between the towers. Check which way the agent faces after coming down.',
+  '3.1': 'Which single action is repeated? Put just that action inside Repeat and set the count to how many times it happens.',
+  '3.2': 'Walking a square is the same "side, then turn" pattern for every side. What goes inside one pass of the loop, and how many sides does a square have?',
+  '3.3': 'One staircase step is a small zigzag. Build that zigzag in stepUp, test it with a single call, then repeat the call. Don\'t forget the gem at the top.',
+  '4.1': 'You don\'t need to plan every turn. On each pass the agent checks the tile ahead: clear means move, blocked means turn. Repeat an If-Else that uses isPathClear enough times to reach the flag.',
+  '4.2': 'The tiles change every run, so a fixed list of actions will fail. Step onto a tile, then let an If-Else choose the action based on what the agent is standing on.',
+  '4.3': 'Three possible items need three different outcomes. One If-Else gives two outcomes; put a second If-Else inside the Else to split the remaining cases.',
+  '5.1': 'Keep walking only while two things are both true. Which sensor says the way is open, and which one warns about spikes? Join them with AND, and use NOT where you need the opposite.',
+  '5.2': 'Gems and keys are both picked up by Collect Item. Instead of two separate Ifs, ask one question that is true for either item. That is what OR does.',
+  '5.3': 'On each pass decide: is the tile ahead safe (no water AND no trap)? If so, step forward; if not, sidestep north and face East again. Loop until the agent is on the flag.',
+  '6.1': 'You don\'t know how far away the wall is, so don\'t count. A While loop keeps going as long as its condition is true. Which sensor stays true until the wall?',
+  '6.2': 'The gem moves every run. Keep stepping while the agent is NOT on the gem, then collect it once the loop ends.',
+  '6.3': 'Loop until the agent reaches the flag. Inside the loop, move forward when the way is clear; only when blocked do you choose a turn, by checking which side is open.',
+  '7.1': 'This is the left-hand rule. On each pass check, in this order: is left open? is ahead open? otherwise turn right. The order of the checks matters, so test it on paper at a junction.',
+  '7.2': 'Keep going until every gem is collected. On each pass: collect if you are on a gem, then move forward, or turn right if blocked. The spiral happens by itself.',
+  '7.3': 'Your program must solve three different mazes, so fixed counts or routes will fail. A wall-following rule that works anywhere is the key. Reuse your idea from 7.1.',
+  '8.1': 'Set the counter to 0 before the loop. Each time a gem is collected, add 1 to gemCount. Watch the value in the objective box while the program runs.',
+  '8.2': 'The path carries on past the flag, so isPathClear will not stop you in time. Count down instead: set stepsLeft first, loop while it is above zero, and reduce it by 1 on every step.',
+  '8.3': 'Start totalScore at 0 and add 25 each time a gem is collected. The vault door only opens when the score is high enough, so collect all four gems before walking through it.',
+  '9.1': 'Spike traps only hurt slow agents. Change the agent\'s speed property before it starts moving, then walk to the flag.',
+  '9.2': 'A barrier only lets the agent through if shieldColor matches it. Set the colour for the first barrier, walk past it, then change colour before the second one.',
+  '9.3': 'Each agent needs a different shield colour. Select agent 1 and set its colour, select agent 2 and set its colour, then select both and move them together.',
+  '10.1': 'Write the function once, using its parameter (distance) inside Move Forward. Each Call then fills in a different number. Work out the length of each straight leg and the turns between them.',
+  '10.2': 'Each side does the same three things with a different length and colour. Use both parameters inside drawSide, then call it once per side with the right values.',
+  '10.3': 'Each guard needs the same routine: walk up to it, then attack. Make the distance and the weapon parameters. Count the tiles to stand directly in front of each guard, and check which guard is armoured.',
+  '11.1': 'Read the coordinates on the map edges. Bridges can only be placed on water, so build across the river first, then walk.',
+  '11.2': 'Find an open tile on your side and an open tile on the far island using the edge coordinates. One portal links them; then walk onto your end of it.',
+  '11.3': 'Plan three parts: bridge to the gem island, collect the gem, then a portal from that island to the flag island. Check every coordinate against the map edges before you run.',
+  '12.1': 'targets is a list of coordinates. For Each takes one item at a time and puts it in t. What two actions does each target need?',
+  '12.2': 'Each gem in the list has a .type. Inside For Each, use an If that compares g.type with GOLD, and only go to and collect the gem when it matches.',
+  '12.3': 'The waypoints must be visited nearest first, but the list is scrambled. One block puts the list in order before you loop through it.'
+};
+const CONCEPT_BLOCKS = { REPEAT: 'Repeat loop', WHILE: 'While loop', IF: 'If block', FUNC: 'Define + Call function', PARAM: 'function with parameters',
+  AND: 'AND chip', OR: 'OR chip', NOT: 'NOT chip', PROP: 'Set agent property block', AGENT: 'Control agent block', WORLD: 'World block',
+  FOREACH: 'For Each loop', SORT: 'Sort block' };
+
+// Objective labels without live progress counts, e.g. "Collect all 3 gems 💎".
+function objectiveNames(L) {
+  return evalObjectives(L, buildWorld(L, 1, 0), []).map(o => o.label.replace(/\s*\(\d+\/\d+\)/, '').replace(/\s*\(now: .*\)$/, ''));
+}
+
+// Three-step hint scaffold. step: 1 = understand the goal, 2 = plan a strategy, 3 = Captain's original hint (+ optional reveal).
+function hintStep(L, step) {
+  const isl = WORLD_ISLANDS[L.island - 1];
+  if (step <= 1) {
+    const needs = L.objectives.filter(o => o.uses).map(o => CONCEPT_BLOCKS[o.uses]).filter(Boolean);
+    return { step: 1, title: 'Hint 1 of 3 · Understand the goal', lines: [
+      `Island ${isl.id}, ${isl.name}: ${isl.concept}.`,
+      'To clear this stage: ' + objectiveNames(L).join(' · ') + '.',
+      ...(needs.length ? [`This stage is about the ${needs.join(' and ')}, so your program must use it.`] : []),
+      'Ask yourself: ' + CONCEPT_QUESTIONS[isl.id]
+    ] };
+  }
+  if (step === 2) {
+    return { step: 2, title: 'Hint 2 of 3 · Plan a strategy', lines: [
+      STAGE_STRATEGY[L.id],
+      'Checkpoint: add a few blocks, press ▶ Run, and check the agent ends up where you expected before adding more.'
+    ] };
+  }
+  return { step: 3, title: 'Hint 3 of 3 · Captain\'s hint', lines: [L.hint], offerReveal: true };
+}
+
+// Locate a node and its ancestors in an AST (outermost first).
+function astPath(ast, id) {
+  let found = null;
+  (function walk(nodes, stack) {
+    for (const n of nodes || []) {
+      if (found) return;
+      const s = stack.concat(n);
+      if (n.id === id) { found = s; return; }
+      walk(n.children, s); walk(n.elseChildren, s);
+    }
+  })(ast, []);
+  return found || [];
+}
+function blockLabel(n) {
+  if (!n) return 'a block';
+  const P = n.params || [];
+  switch (n.type) {
+    case 'ACTION': return ({ moveForward: `Move Forward (${P[0] == null ? 1 : P[0]})`, turnLeft: 'Turn Left', turnRight: 'Turn Right', collectGem: 'Collect Gem',
+      collectKey: 'Collect Key', collectItem: 'Collect Item', toggleSwitch: 'Activate Switch', attack: P.length ? `Attack with ${P[0]}` : 'Attack', goTo: `Go To (${P[0]})` })[n.command] || n.command;
+    case 'REPEAT': return `Repeat ${P[0]} times`; case 'WHILE': return 'While'; case 'IF': return n.elseChildren ? 'If-Else' : 'If';
+    case 'FUNC_DEF': return `Define ${n.name}`; case 'CALL': return `Call ${n.name}`; case 'FOREACH': return `For each ${n.name} in ${n.list}`;
+    case 'VAR_SET': return `Set ${n.name}`; case 'VAR_CHANGE': return `Change ${n.name}`; case 'PROP_SET': return `Set agent.${n.name}`;
+    case 'AGENT': return `Control agent ${n.name}`; case 'SORT': return `Sort ${n.list}`;
+    case 'WORLD': return n.command === 'placeBlock' ? `Place ${P[0]}` : 'Portal';
+  }
+  return 'a block';
+}
+function agentsAt(w) {
+  if (!w) return '';
+  return w.agents.map(a => `${w.agents.length > 1 ? 'Agent ' + a.id : 'The agent'} is at (${a.x},${a.y}) facing ${DIR_NAMES[a.dir]}`).join('; ');
+}
+
+// Feedback categories, matched against the engine's own GameError messages (observed events, not guesses).
+const FEEDBACK_RULES = [
+  { cat: 'obstacle', re: /^Bonk!|walk off the edge/, title: 'Blocked by an obstacle',
+    why: 'Move Forward tried to step onto a tile the agent cannot enter.',
+    next: 'Count the tiles from the agent to the obstacle (use the coordinates on the map edges), then change the number in {block} or turn before it.' },
+  { cat: 'water', re: /^Splash!/, title: 'Fell into the water',
+    why: 'Agents cannot swim, so the route must avoid water tiles (or cross on a bridge).',
+    next: 'Check the direction the agent is facing before {block}. Is a turn missing, or is the number of steps too high?' },
+  { cat: 'trap', re: /Spike trap/, title: 'Hurt by a spike trap',
+    why: 'A SLOW agent cannot cross spike traps.',
+    next: 'Either steer around the trap (check isTrapAhead) or, if this stage allows it, set agent.speed to FAST before crossing.' },
+  { cat: 'barrier', re: /barrier blocks/, title: 'Stopped by a coloured barrier',
+    why: 'A barrier only lets an agent through when its shieldColor matches the barrier colour.',
+    next: 'Set the agent\'s shieldColor to the barrier\'s colour before {block}.' },
+  { cat: 'locked-door', re: /door is locked/, title: 'The door is locked',
+    why: 'The agent walked into a door before meeting its unlock condition.',
+    next: 'Before {block}, make sure the door can open: collect the key (stand on it and use Collect Key), or for a vault door make the variable reach the value shown.' },
+  { cat: 'guard', re: /guard blocks the way|shrugs off|Unknown weapon/, title: 'A guard is in the way',
+    why: 'Guards block the path until they are defeated with the right weapon.',
+    next: 'Stop directly in front of the guard, use Attack (with the weapon it needs), then move on.' },
+  { cat: 'loop-guard', re: /infinite loop|While loop is empty|nested function calls/, title: 'The program never finished',
+    why: 'A loop (or a function calling itself) kept running without reaching its end, so the game stopped it.',
+    next: 'Look at the condition of {block}. What changes inside the loop so that the condition eventually becomes false? Slow the speed down and watch the highlighted blocks.' },
+  { cat: 'condition', re: /needs a condition|chip is empty|needs two conditions|Unknown sensor|Unknown condition/, title: 'A condition is missing',
+    why: 'An If or While block (or an AND / OR / NOT chip) has an empty socket, so the agent cannot decide.',
+    next: 'Drag a Sensor chip from the 📡 Sensor tab into the empty socket of {block}.' },
+  { cat: 'cursed-gem', re: /^Cursed!/, title: 'Collected a cursed silver gem',
+    why: 'This stage only allows GOLD gems; collecting a SILVER one ends the run.',
+    next: 'Before {block}, check the gem\'s type (g.type == GOLD) so silver gems are skipped.' },
+  { cat: 'unknown-block', re: /^Unknown (block type|action|world action)/, title: 'A block was not recognised',
+    why: 'This block cannot be run. It may have come from an old saved program.',
+    next: 'Remove {block} and drag a fresh copy from the palette.' },
+  { cat: 'waypoint-order', re: /Wrong order!/, title: 'Waypoints visited in the wrong order',
+    why: 'Waypoints must be visited nearest first, measured from the start.',
+    next: 'Sort the list before the For Each loop so the nearest waypoint comes first.' },
+  { cat: 'set-before-change', re: /must be Set to a number first/, title: 'Variable changed before it was set',
+    why: 'Change can only add to a variable that already holds a number.',
+    next: 'Add a Set block for this variable before {block} (and check the name is spelt the same in both).' },
+  { cat: 'function', re: /is not defined|argument\(s\) but got/, title: 'Function call problem',
+    why: 'A Call block must match a Define block with the same name and the same number of inputs.',
+    next: 'Check {block}: is the name spelt exactly like the Define block, and does it give one value for each parameter?' },
+  { cat: 'world-build', re: /outside the map|placed on water|Cannot place|portal needs|portal ends|Unknown tile type/, title: 'Cannot build there',
+    why: 'World blocks need coordinates inside the map and a suitable tile (bridges on water, portals on open ground).',
+    next: 'Check the x and y values in {block} against the numbers on the map edges.' },
+  { cat: 'block-value', re: /must be between|must be a number|input box is empty|Unknown variable|not a valid|Cannot understand|Incomplete expression|Expected a number|must be one of|is not a list|has no property|Unknown comparison|Missing "\)"|Unexpected "|no agent|Go To needs/, title: 'A block has a value the game cannot use',
+    why: 'One of the input boxes in the block is empty, misspelt or out of range.',
+    next: 'Check every input box in {block}: spelling of names, numbers in range, and allowed values.' }
+];
+const LOOP_TYPES = ['WHILE', 'REPEAT', 'FOREACH'];
+
+// Explain a failed or stopped run. obs = { nodeId: last block executed, log: [runner log lines] }.
+function classifyRunResult(L, res, ast, obs) {
+  obs = obs || {}; ast = ast || [];
+  const w = res.world, msg = res.error || '';
+  const multi = L.mazeSeeds && L.mazeSeeds.length > 1 && res.variant != null ? ` on maze ${res.variant + 1} of ${L.mazeSeeds.length}` : '';
+  const objs = w ? evalObjectives(L, w, ast).map((o, i) => Object.assign({}, o, { def: L.objectives[i] })) : [];
+  const unmet = objs.filter(o => !o.done);
+  const where = w ? ` ${agentsAt(w)} after ${w.steps} step${w.steps === 1 ? '' : 's'}${multi}.` : '';
+  const path = obs.nodeId ? astPath(ast, obs.nodeId) : [];
+  let node = path[path.length - 1] || null;
+  const fb = { category: 'other', title: 'The program stopped', happened: '', expected: unmet.map(o => o.label), why: '', next: '', nodeId: null };
+  const randomTip = L.randomFill ? ' This map changes every Run, so let sensors decide instead of fixed moves.' : '';
+
+  if (res.stopped) return Object.assign(fb, { category: 'stopped', title: 'Run stopped', happened: 'You stopped the program.' + where,
+    why: 'The run was interrupted before it finished, so the goals were not checked.', next: 'Press ▶ Run to try again from the start.' });
+  if (res.unexpected || /^Internal error|^Something unexpected/.test(msg)) return Object.assign(fb, { category: 'unexpected', title: 'Something went wrong in the game',
+    happened: msg, why: 'This was not caused by a mistake in your blocks that the game could identify.', next: 'Press ↺ Reset and run again. If it keeps happening, tell your teacher which stage you were on.' });
+
+  if (res.incomplete) {
+    const collectMiss = (obs.log || []).map(m => /Nothing to collect at \((\d+),(\d+)\)|No switch at \((\d+),(\d+)\)/.exec(m)).find(Boolean);
+    const other = unmet.filter(o => !o.uses);
+    fb.happened = 'Your program ran to the end, but not every goal was met.' + where;
+    if (!other.length && unmet.length) {
+      const need = unmet.map(o => CONCEPT_BLOCKS[o.def.uses] || o.label);
+      return Object.assign(fb, { category: 'missing-concept', title: 'Right result, but the key idea is missing',
+        why: `This stage practises the ${need.join(' and ')}. The agent reached the goal, but the program does not use it yet.`,
+        next: `Rebuild the repeated or decision-making part of your program with the ${need.join(' and ')}, then Run again.` });
+    }
+    if (collectMiss) {
+      const x = collectMiss[1] || collectMiss[3], y = collectMiss[2] || collectMiss[4];
+      return Object.assign(fb, { category: 'collect-position', title: 'Collected in the wrong place',
+        happened: fb.happened + ` A collect or switch block was used at (${x},${y}), where there was nothing to use.`,
+        why: 'Collect and Activate only work while the agent is standing on the item.',
+        next: L.randomFill ? 'This map changes every Run, so use a sensor (such as isOnGem) to decide when to collect, instead of a fixed number of moves.'
+          : 'Count the tiles again so the agent stops exactly on the item before collecting.' });
+    }
+    const first = other[0], d = first && first.def;
+    let why = 'The run finished without an error, but the game checks every goal at the end.', next = 'Compare where the agent finished with where it needs to be, then adjust your blocks.';
+    const left = list => list.slice(0, 3).map(e => `(${e.x},${e.y})`).join(', ');
+    if (d === 'gems') { const g = w.gems.filter(g => !g.taken && g.type !== 'SILVER'); why = `A gem is still waiting at ${left(g)}.`; next = 'Make sure the agent stands on every gem tile and uses Collect Gem there.'; }
+    else if (d === 'keys') { why = `A key is still at ${left(w.keys.filter(k => !k.taken))}.`; next = 'Stop on the key tile and use Collect Key.'; }
+    else if (d === 'switches') { why = `A switch is still off at ${left(w.switches.filter(s => !s.on))}.`; next = 'Stop on each switch and use Activate Switch.'; }
+    else if (d === 'guards') { why = `A guard is still standing at ${left(w.guards.filter(g => g.alive))}.`; next = 'Face the guard from the tile next to it and Attack before moving on.'; }
+    else if (d === 'exit') { why = `The flag is at ${left(w.exits)}, but the agent did not finish on it.`; next = 'Compare the agent\'s final position with the flag and adjust the last moves or turns.'; }
+    else if (d === 'beacons') { why = `Only ${w.beaconsDone} of ${w.beacons.length} waypoints were visited.`; next = 'Make sure your loop goes to every waypoint in the list.'; }
+    else if (d && d.var) { const v = w.vars[d.var]; why = `${d.var} ended as ${v === undefined ? 'not set' : fmtVal(v)}, but it needs to be ${d.op} ${d.value}.`; next = 'Watch the variable in the objective box while the program runs, and check your Set and Change blocks.'; }
+    else if (d && d.placed) { why = `You built ${w.placed} of the ${d.placed} structures needed.`; next = 'Add the missing World blocks.'; }
+    return Object.assign(fb, { category: 'incomplete', title: 'Goals not complete yet', why, next: next + randomTip });
+  }
+
+  const rule = FEEDBACK_RULES.find(r => r.re.test(msg));
+  if (rule) {
+    if (rule.cat === 'loop-guard') { // point at the loop (or call) responsible, not the last action inside it
+      const loop = path.slice().reverse().find(n => LOOP_TYPES.includes(n.type)) || path.slice().reverse().find(n => n.type === 'CALL');
+      if (loop) node = loop;
+    }
+    Object.assign(fb, { category: rule.cat, title: rule.title, why: rule.why, next: rule.next });
+  } else Object.assign(fb, { why: 'The game stopped the program at this point.', next: 'Read the message, check {block} and press ▶ Run again.' });
+  fb.happened = msg + where;
+  if (node) fb.nodeId = node.id;
+  fb.next = fb.next.replace('{block}', node ? `the outlined block (${blockLabel(node)})` : 'the relevant block');
+  return fb;
+}
+
+// Victory feedback: objectives met, steps/blocks vs targets, and at most ONE improvement tip (only when justified).
+function successFeedback(L, stepsUsed, blocksUsed, ast, opts) {
+  opts = opts || {}; ast = ast || [];
+  const hasS = L.targetSteps != null;
+  const out = { objectives: objectiveNames(L), steps: { used: stepsUsed, target: hasS ? L.targetSteps : null, ok: hasS && stepsUsed <= L.targetSteps },
+    blocks: { used: blocksUsed, target: L.optimalBlocks, ok: L.optimalBlocks != null && blocksUsed <= L.optimalBlocks }, tip: null };
+  const strip = a => JSON.stringify(a, (k, v) => (k === 'id' ? undefined : v));
+  if (opts.revealed && strip(ast) === strip(solutionAST(L))) {
+    out.tip = 'You ran the revealed reference solution. To make the idea stick, clear the workspace and rebuild it from memory.';
+    return out;
+  }
+  const pal = new Set(L.palette.map(p => p.split('|')[0])), uses = collectUses(ast);
+  if (!out.blocks.ok && out.blocks.target != null) {
+    let run = 0, longest = 0;
+    (function scan(nodes) { (nodes || []).forEach(n => { run = n.type === 'ACTION' && n.command === 'moveForward' ? run + 1 : 0; longest = Math.max(longest, run); }); run = 0; (nodes || []).forEach(n => { scan(n.children); scan(n.elseChildren); }); })(ast);
+    const pre = `Your program uses ${blocksUsed} blocks; the block-efficiency star needs ${out.blocks.target} or fewer. `;
+    if (longest >= 2) out.tip = pre + `You have ${longest} Move Forward blocks in a row: one Move Forward with a bigger number does the same job.`;
+    else {
+      const tool = [['repeat', 'REPEAT', 'a Repeat loop'], ['while', 'WHILE', 'a While loop'], ['defFunc', 'FUNC', 'a function (Define + Call)'], ['forEach', 'FOREACH', 'a For Each loop']].find(([k, u]) => pal.has(k) && !uses.has(u));
+      out.tip = pre + (tool ? `Look for blocks that repeat in a pattern; ${tool[2]} could replace them.` : 'Look for blocks that repeat or do not change the result, and remove or combine them.');
+    }
+  } else if (hasS && !out.steps.ok) {
+    let cancel = false;
+    (function scan(nodes) { (nodes || []).forEach((n, i) => { const m = nodes[i + 1]; if (m && n.type === 'ACTION' && m.type === 'ACTION' && ((n.command === 'turnLeft' && m.command === 'turnRight') || (n.command === 'turnRight' && m.command === 'turnLeft'))) cancel = true; scan(n.children); scan(n.elseChildren); }); })(ast);
+    out.tip = `The agent took ${stepsUsed} steps; the step-efficiency star needs ${out.steps.target} or fewer. ` +
+      (cancel ? 'A Turn Left next to a Turn Right cancels out: removing both saves 2 steps.' : 'Look for a shorter route, or moves and turns that go back on themselves.');
+  }
+  return out;
+}
+
+// ---------- Learning alignment (Stage 05) ----------
+// Per stage: the construct practised, what a correct solution demonstrates, an optional non-graded reflection
+// question with a model answer, and `shows`: constructs the reference solution must contain (verified by tests).
+const STAGE_LEARNING = {
+  '1.1': { construct: 'A single precise command', shows: [], demonstrates: 'You turned a goal into one exact command: Move Forward with the right distance.', reflect: 'What would you change if the gem were 5 tiles away?', answer: 'Only the number inside Move Forward. The command itself stays the same.' },
+  '1.2': { construct: 'Sequence of commands', shows: [], demonstrates: 'You broke a route into an ordered sequence: move, turn, move, collect. In a sequence, order matters.', reflect: 'What happens if you swap Turn Right and the first Move Forward?', answer: 'The agent turns first and walks the wrong way. Changing the order of a sequence changes the result.' },
+  '1.3': { construct: 'Decomposition into sub-tasks', shows: [], demonstrates: 'You split a big task (guard, key, door, flag) into smaller steps and solved them in the right order.', reflect: 'Which sub-task had to come first, and why?', answer: 'Defeating the guard: it blocks the corridor, so nothing else can happen until it is gone.' },
+  '2.1': { construct: 'Function: define once, call many times', shows: ['FUNC'], demonstrates: 'You named a repeated group of commands (stepAndCollect) once and reused it by calling it.', reflect: 'If there were 5 gems in the same pattern, what would you change?', answer: 'Only the number of Call blocks. The function itself stays the same.' },
+  '2.2': { construct: 'Reusing a function', shows: ['FUNC'], demonstrates: 'You captured "walk, collect, turn" as cleanCorner and called it once for each corner.', reflect: 'Why does cleanCorner end with a turn?', answer: 'So that after each call the agent already faces the next side, ready for the next call.' },
+  '2.3': { construct: 'Several functions (abstraction)', shows: ['FUNC'], demonstrates: 'You gave two different repeated jobs their own named functions and combined them with ordinary moves.', reflect: 'How do the function names make your program easier to read?', answer: 'They say what each part does (climb, collect), so you can follow the plan without reading every block.' },
+  '3.1': { construct: 'Repeat loop (fixed count)', shows: ['REPEAT'], demonstrates: 'You replaced several identical commands with one Repeat loop.', reflect: 'Which number would you change to walk 10 steps?', answer: 'The Repeat count: 4 becomes 10.' },
+  '3.2': { construct: 'Repeat loop with a pattern inside', shows: ['REPEAT'], demonstrates: 'You spotted the "side, then turn" pattern of a square and looped it once per side.', reflect: 'Which blocks are inside the loop, and why exactly those?', answer: 'Move Forward and Turn Right: together they make one side, and the square repeats that unit 4 times.' },
+  '3.3': { construct: 'Loop calling a function', shows: ['REPEAT', 'FUNC'], demonstrates: 'You combined a function (one stair step) with a loop (five steps): one abstraction used inside another.', reflect: 'Why is it useful to test stepUp once before repeating it?', answer: 'If one step is wrong, every repeat is wrong. Testing a single call finds the mistake early.' },
+  '4.1': { construct: 'If-Else decision', shows: ['IF'], demonstrates: 'On every pass your agent checked the tile ahead and decided between moving and turning.', reflect: 'What does the agent check each time, and what are the two possible actions?', answer: 'isPathClear: if the way is clear it moves forward, otherwise it turns right.' },
+  '4.2': { construct: 'Decisions from sensor input', shows: ['IF'], demonstrates: 'Your program handled a map that changes every run by choosing each action from what the agent senses.', reflect: 'Why would a fixed list of actions fail here?', answer: 'The gems and switches move every run; only a sensor check works for every map.' },
+  '4.3': { construct: 'Nested If-Else (three outcomes)', shows: ['IF'], demonstrates: 'You nested an If-Else inside an Else to handle three different cases.', reflect: 'How many outcomes can one If-Else give, and how did you get three?', answer: 'Two. Putting a second If-Else in the Else part splits the remaining case into two more.' },
+  '5.1': { construct: 'Compound condition: AND with NOT', shows: ['AND', 'NOT'], demonstrates: 'You combined two sensor checks so the agent only moves when both say it is safe.', reflect: 'What would happen if you removed NOT from "NOT isTrapAhead"?', answer: 'The agent would only walk when a trap IS ahead: the opposite of what you want.' },
+  '5.2': { construct: 'Compound condition: OR', shows: ['OR'], demonstrates: 'You used OR so that one If handles two different items.', reflect: 'When is "isOnGem OR isOnKey" true?', answer: 'Whenever the agent stands on a gem or on a key (either one is enough).' },
+  '5.3': { construct: 'Compound conditions inside a loop', shows: ['AND', 'NOT', 'WHILE'], demonstrates: 'On each pass you checked "no water AND no trap" and chose a safe sidestep otherwise.', reflect: 'Why is AND, not OR, the right way to join the two checks?', answer: 'Both dangers must be absent before stepping forward. With OR, one danger would be enough to step into it.' },
+  '6.1': { construct: 'While loop (repeat until a condition changes)', shows: ['WHILE'], demonstrates: 'You repeated an action until a condition changed, with no counting.', reflect: 'When exactly does your loop stop?', answer: 'As soon as isPathClear is false: the wall is directly ahead.' },
+  '6.2': { construct: 'While NOT: searching', shows: ['WHILE', 'NOT'], demonstrates: 'You searched for a gem that moves every run by looping until the agent was standing on it.', reflect: 'Why does Collect Gem go after the loop, not inside it?', answer: 'The loop only ends when the agent is on the gem, so collecting once afterwards is enough.' },
+  '6.3': { construct: 'While loop with decisions inside', shows: ['WHILE', 'IF'], demonstrates: 'You combined a While loop with If-Else decisions to follow a twisting corridor all the way to the flag.', reflect: 'What makes this loop finish?', answer: 'Reaching the flag: isAtExit becomes true, so "NOT isAtExit" becomes false.' },
+  '7.1': { construct: 'Algorithm: the wall-follower rule', shows: ['WHILE', 'IF'], demonstrates: 'You wrote a general rule (left, else ahead, else turn right) instead of a fixed route.', reflect: 'Why does the order of the checks matter?', answer: 'Checking left first keeps the left hand on the wall; a different order follows a different path.' },
+  '7.2': { construct: 'Algorithm with a stopping condition', shows: ['WHILE', 'IF'], demonstrates: 'You used a simple repeated rule plus a stopping condition (all gems collected) to cover the whole spiral.', reflect: 'How does the agent know when to stop?', answer: 'The loop condition "NOT allGemsCollected" becomes false after the last gem.' },
+  '7.3': { construct: 'General algorithm (works on unseen inputs)', shows: ['WHILE', 'IF'], demonstrates: 'One program solved three different mazes: the mark of a true algorithm.', reflect: 'What would happen if you used a fixed list of moves here?', answer: 'It might solve one maze but would fail the others. Only a general rule works on all three.' },
+  '8.1': { construct: 'Variable as a counter', shows: ['VAR'], demonstrates: 'You stored a number in gemCount and increased it each time a gem was collected.', reflect: 'Why must gemCount be set to 0 first?', answer: 'Change adds to the current value, so it needs a starting value; 0 means no gems counted yet.' },
+  '8.2': { construct: 'Variable controlling a loop', shows: ['VAR', 'WHILE', 'CMP'], demonstrates: 'You used a countdown variable to stop a loop at exactly the right moment.', reflect: 'What value does stepsLeft have when the loop stops, and why?', answer: '0: the loop runs while stepsLeft > 0, and every step reduces it by 1.' },
+  '8.3': { construct: 'Accumulating a total', shows: ['VAR'], demonstrates: 'You added 25 per gem to totalScore and the total opened the vault.', reflect: 'If each gem were worth 30, which block would you change?', answer: 'Only the Change totalScore block: 25 becomes 30.' },
+  '9.1': { construct: 'Object property (speed)', shows: ['PROP'], demonstrates: 'You changed a property of the agent object to give it a new ability.', reflect: 'Using this stage as an example, what is a property?', answer: 'A named value that belongs to an object: agent.speed can be SLOW or FAST and changes how the agent behaves.' },
+  '9.2': { construct: 'Changing a property\'s value', shows: ['PROP'], demonstrates: 'You changed shieldColor between barriers: one property, different values at different times.', reflect: 'Why do you need to set shieldColor twice?', answer: 'The two barriers are different colours, so the property must match each one in turn.' },
+  '9.3': { construct: 'Separate objects, separate properties', shows: ['PROP', 'AGENT'], demonstrates: 'You gave two agent objects different property values, then controlled them together.', reflect: 'Why must agent 1 and agent 2 have different shields?', answer: 'Each faces a different-coloured barrier, and each object keeps its own property value.' },
+  '10.1': { construct: 'Function with a parameter', shows: ['PARAM'], demonstrates: 'One function with a distance input replaced several similar move sequences.', reflect: 'What does "distance" stand for when you call moveSteps(4)?', answer: '4: the value passed in is used wherever distance appears inside the function.' },
+  '10.2': { construct: 'Function with several parameters', shows: ['PARAM'], demonstrates: 'drawSide took two inputs (length and colour), so one function drew every side.', reflect: 'Which values change between the three calls?', answer: 'The length and the colour; the walk-and-turn steps stay the same.' },
+  '10.3': { construct: 'Parameters of different kinds', shows: ['PARAM'], demonstrates: 'Your function took a number (distance) and a value (weapon), so one routine handled every guard.', reflect: 'Why is the weapon a parameter rather than fixed inside the function?', answer: 'The armoured guard needs a HAMMER while the others need a SWORD; a parameter lets each call choose.' },
+  '11.1': { construct: 'Coordinates: changing the world', shows: ['WORLD'], demonstrates: 'You used (x, y) coordinates to build bridges, changing the world before moving through it.', reflect: 'How did you find the coordinates (7,5) and (8,5)?', answer: 'From the numbers along the top (x) and left (y) edges of the map.' },
+  '11.2': { construct: 'Linking two coordinates', shows: ['WORLD'], demonstrates: 'You connected two places with a portal: a structure defined by two coordinates.', reflect: 'What would happen if both portal ends used the same tile?', answer: 'It is not allowed: a portal needs two different tiles to link.' },
+  '11.3': { construct: 'Planning a multi-part build', shows: ['WORLD'], demonstrates: 'You planned several structures with coordinates and combined building with moving and collecting.', reflect: 'Why must the bridges be built before the agent moves?', answer: 'Otherwise the agent walks into the water: the world must be changed before walking across it.' },
+  '12.1': { construct: 'Lists and For Each', shows: ['FOREACH'], demonstrates: 'You processed every coordinate in a list with a single loop body.', reflect: 'What value does t hold on the second pass of the loop?', answer: 'The second coordinate in the targets list.' },
+  '12.2': { construct: 'Filtering a list with a condition', shows: ['FOREACH', 'IF', 'CMP'], demonstrates: 'You looped over a list and used each item\'s .type to decide which ones to act on.', reflect: 'What would happen without the If inside the loop?', answer: 'The agent would collect the cursed silver gems too, which ends the run.' },
+  '12.3': { construct: 'Sorting before processing', shows: ['SORT', 'FOREACH'], demonstrates: 'You sorted a list so that processing it in order gave the required nearest-first route.', reflect: 'Why must sorting happen before the For Each loop?', answer: 'The loop visits items in list order, so the list must already be nearest-first.' }
+};
+const PALETTE_NAMES = { move: 'Move Forward', turnLeft: 'Turn Left', turnRight: 'Turn Right', collectGem: 'Collect Gem', collectKey: 'Collect Key', collectItem: 'Collect Item',
+  toggleSwitch: 'Activate Switch', attack: 'Attack', attackWith: 'Attack with', goTo: 'Go To', agentSelect: 'Control agent', repeat: 'Repeat', while: 'While', if: 'If',
+  ifElse: 'If-Else', defFunc: 'Define', callFunc: 'Call', forEach: 'For Each', setVar: 'Set variable', changeVar: 'Change variable', setProp: 'Set agent property',
+  sortList: 'Sort list', placeBlock: 'Place', spawnPortal: 'Portal', sensor: 'Sensor', not: 'NOT', and: 'AND', or: 'OR', cmp: 'Compare' };
+
+// Star rules in words that match onSubstageVictory exactly: 1 star for the goals, plus one independent
+// bonus star for each efficiency target met (steps, blocks). A missing target never awards its star.
+function starRules(L) {
+  const steps = L.targetError ? 'unavailable on this map' : L.targetSteps != null ? `${L.randomFill ? 'about ' : ''}${L.targetSteps} or fewer${stepTargetNote(L)}` : 'measured after your first run';
+  return [
+    { star: 'goals', text: 'Complete every goal (including any required block) to clear the stage: 1 star.' },
+    { star: 'steps', text: `+1 star for step efficiency: steps ${steps}.` },
+    { star: 'blocks', text: `+1 star for block efficiency: blocks ${L.optimalBlocks != null ? L.optimalBlocks + ' or fewer' : 'measured after your first run'}.` }
+  ];
+}
+// How the ⭐ step target was measured, in student-friendly words ('' for ordinary fixed maps).
+function stepTargetNote(L) {
+  if (L.randomFill) return ' (varies per map)';
+  if (L.mazeSeeds && L.mazeSeeds.length > 1) return ` (all ${L.mazeSeeds.length} mazes)`;
+  return '';
+}
+// "Before you code" card: original stage wording + the verified learning mapping.
+function learningCard(L) {
+  const isl = WORLD_ISLANDS[L.island - 1], m = STAGE_LEARNING[L.id];
+  const names = [...new Set(L.palette.map(p => PALETTE_NAMES[p.split('|')[0]] || p.split('|')[0]))];
+  return { id: L.id, goal: L.goal, task: L.text, concept: `${isl.concept}: ${m.construct}`, objectives: objectiveNames(L), stars: starRules(L).map(s => s.text), blocks: names };
+}
+function demonstrated(L) { const m = STAGE_LEARNING[L.id]; return { construct: m.construct, text: m.demonstrates, reflect: m.reflect, answer: m.answer }; }
+
+// ---------- Engagement (Stage 06): progress messages built only from real scores and the existing curriculum ----------
+// ctx = { prevBest, stepsUsed, blocksUsed, failedRuns, nextId, nextStars }. Never changes stars or unlocking.
+function victorySummary(L, stars, ctx) {
+  ctx = ctx || {};
+  const prev = ctx.prevBest || 0, best = Math.max(prev, stars), out = { personalBest: null, bestKept: null, stillAvailable: [], effort: null, next: null };
+  if (prev > 0 && stars > prev) out.personalBest = `Personal best improved: ${prev} → ${stars} star${stars === 1 ? '' : 's'}.`;
+  if (prev > stars) out.bestKept = `Your best of ${prev} star${prev === 1 ? '' : 's'} on this stage is kept.`;
+  if (best < 3) { // what replaying could still earn, from this run's result against the existing targets
+    if (L.targetSteps == null) out.stillAvailable.push('+⭐ step efficiency: the step target was unavailable on this map; replay to try again.');
+    else if (ctx.stepsUsed > L.targetSteps) out.stillAvailable.push(`+⭐ step efficiency: finish in ${L.targetSteps} steps or fewer${stepTargetNote(L)} (you used ${ctx.stepsUsed}).`);
+    if (L.optimalBlocks != null && ctx.blocksUsed > L.optimalBlocks) out.stillAvailable.push(`+⭐ block efficiency: use ${L.optimalBlocks} blocks or fewer (you used ${ctx.blocksUsed}).`);
+  }
+  if (ctx.failedRuns > 0) out.effort = `🔧 Debugging pays off: you improved your program after ${ctx.failedRuns} unsuccessful run${ctx.failedRuns === 1 ? '' : 's'}.`;
+  const N = ctx.nextId && SUBSTAGE_DATA[ctx.nextId];
+  if (N) {
+    const isl = WORLD_ISLANDS[N.island - 1];
+    out.next = { id: N.id, title: N.title, kind: N.kind, island: isl.name, concept: isl.concept, construct: STAGE_LEARNING[N.id].construct,
+      newIsland: N.island !== L.island, cleared: ctx.nextStars || 0 };
+  }
+  return out;
+}
+
+// Plain-text description of a puzzle map (screen-reader alternative to the canvas; Stage 04).
+function describeWorld(L, w) {
+  const at = arr => arr.slice(0, 8).map(e => `(${e.x},${e.y})`).join(', ') + (arr.length > 8 ? ` and ${arr.length - 8} more` : '');
+  const part = (label, arr) => (arr.length ? `${label}: ${at(arr)}.` : '');
+  const maze = L.mazeSeeds && L.mazeSeeds.length > 1 ? ` Maze ${w.variant + 1} of ${L.mazeSeeds.length}.` : '';
+  return [`Puzzle ${L.id} map, ${COLS} columns by ${ROWS} rows, x from 0 on the left, y from 0 at the top.${maze}`, agentsAt(w) + '.',
+    part('Gems to collect', w.gems.filter(g => !g.taken && g.type !== 'SILVER')), part('Silver gems (cursed)', w.gems.filter(g => !g.taken && g.type === 'SILVER')),
+    part('Keys', w.keys.filter(k => !k.taken)), part('Switches still off', w.switches.filter(s => !s.on)), part('Guards', w.guards.filter(g => g.alive)),
+    part(w.exits.length > 1 ? 'Exit flags' : 'Exit flag', w.exits), part('Waypoints not yet visited', w.beacons.filter(b => !b.active)), part('Barriers', w.barriers),
+    'Use the objective list for goals; the console logs each action.'].filter(Boolean).join(' ');
+}
+// @@FEEDBACK-END
+
 // ==========================================
 // 2. STORAGE & MAP NAVIGATION ENGINE
 // ==========================================
@@ -1638,13 +2121,21 @@ let APP_STATE = {
   programs: {}                // saved workspace AST per sub-stage
 };
 const UI = { speed: 3, cat: 'action', time: 0, last: 0, world: null, disp: [], particles: [], hoverIsland: null, hoverNode: null,
-  ast: [], hintShown: false, wmT: null, ivT: null, gmT: null, bubbleUntil: 0, bubbleAgent: 0 };
+  ast: [], hintStep: 0, revealBackup: null, revealed: false, kbSel: null, kbMode: false, focusIsland: null, focusNode: null, wmT: null, ivT: null, gmT: null, bubbleUntil: 0, bubbleAgent: 0 };
 let memoryStore = null; // in-memory fallback when localStorage is unavailable
 
 function saveProgressToStorage() {
   const data = JSON.stringify({ unlockedIslands: APP_STATE.unlockedIslands, completedSubstages: APP_STATE.completedSubstages, programs: APP_STATE.programs, speed: UI.speed });
   memoryStore = data;
-  try { localStorage.setItem(STORAGE_KEY, data); } catch (e) { /* private mode: keep in memory */ }
+  try { localStorage.setItem(STORAGE_KEY, data); return true; }
+  catch (e) { if (typeof storageWarning === 'function') storageWarning(); return false; } // private mode / blocked / full: keep in memory
+}
+// Storage availability: a concise, dismissible warning when progress cannot persist (no server, no accounts)
+let storageWarned = false;
+function storageWorks() { try { const k = '__codeodyssey_probe'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; } catch (e) { return false; } }
+function storageWarning() {
+  if (storageWarned) return; storageWarned = true;
+  const w = document.getElementById('storage-warning'); if (w) w.hidden = false;
 }
 function loadProgressFromStorage() {
   let raw = null;
@@ -1690,6 +2181,7 @@ function showWorldMap() {
   APP_STATE.currentView = 'WORLD_MAP';
   setActiveScreen('screen-world-map');
   updateHeaders(); renderWorldMapCanvas();
+  focusScreenStart();
 }
 function selectIsland(islandId) {
   if (!APP_STATE.unlockedIslands.includes(islandId)) {
@@ -1701,6 +2193,7 @@ function selectIsland(islandId) {
   APP_STATE.currentView = 'ISLAND_VIEW';
   setActiveScreen('screen-island');
   updateHeaders(); renderIslandCanvas(islandId);
+  focusScreenStart();
 }
 function launchSubstage(subId) {
   if (!SUBSTAGE_DATA[subId]) return;
@@ -1716,6 +2209,7 @@ function launchSubstage(subId) {
   setActiveScreen('screen-workbench');
   initSubstagePuzzle(subId);
   updateHeaders();
+  focusScreenStart();
 }
 function updateHeaders() {
   const tot = `⭐ ${APP_STATE.totalStars}/${MAX_STARS}`;
@@ -1726,10 +2220,12 @@ function updateHeaders() {
   $('wb-score').innerHTML = `⭐ <span class="hide-sm">Score: </span>${APP_STATE.totalStars}/${MAX_STARS}`;
   const L = currentLevel();
   const bc = $('breadcrumbs'); bc.innerHTML = '';
-  const add = (txt, fn, cls) => { const e = document.createElement(fn ? 'a' : 'span'); e.textContent = txt; if (fn) e.addEventListener('click', fn); if (cls) e.className = cls; bc.appendChild(e); };
-  add('World Map', showWorldMap); add('>', null, 'sep');
-  add(`Island ${L.island}: ${WORLD_ISLANDS[L.island - 1].name}`, () => selectIsland(L.island)); add('>', null, 'sep');
-  add(`Sub-stage ${L.id}: ${L.title}`, null, 'cur');
+  const add = (txt, fn, cls) => { const e = document.createElement(fn ? 'button' : 'span'); e.textContent = txt; if (fn) { e.type = 'button'; e.className = 'crumb'; e.addEventListener('click', fn); } if (cls) e.className = cls; bc.appendChild(e); return e; };
+  bc.setAttribute('aria-label', 'Breadcrumb');
+  add('World Map', showWorldMap); add('>', null, 'sep').setAttribute('aria-hidden', 'true');
+  add(`Island ${L.island}: ${WORLD_ISLANDS[L.island - 1].name}`, () => selectIsland(L.island)); add('>', null, 'sep').setAttribute('aria-hidden', 'true');
+  add(`Sub-stage ${L.id}: ${L.title}`, null, 'cur').setAttribute('aria-current', 'page');
+  renderCanvasNav();
 }
 
 // ==========================================
@@ -1833,7 +2329,7 @@ function drawWorldMap() {
   // islands
   const frontier = currentFrontierIsland();
   for (const isl of WORLD_ISLANDS) {
-    const unlocked = isIslandUnlocked(isl.id), complete = isIslandComplete(isl.id), hover = UI.hoverIsland === isl.id;
+    const unlocked = isIslandUnlocked(isl.id), complete = isIslandComplete(isl.id), kbFocus = UI.focusIsland === isl.id, hover = UI.hoverIsland === isl.id || kbFocus;
     const bob = Math.sin(t * 1.4 + isl.id) * 2, sc = hover ? 1.09 : 1, r = 46 * sc, pos = islandXY(isl), cx = pos.x, cy = pos.y + bob;
     const pts = blobPoints(isl.id, 16, 0.42);
     ctx.fillStyle = 'rgba(0,0,0,0.28)'; blobPath(ctx, pts, cx + 4, cy + 8, r * 1.25, r * 0.95); ctx.fill();
@@ -1851,6 +2347,10 @@ function drawWorldMap() {
     if (hover || isl.id === frontier && unlocked) {
       ctx.strokeStyle = isl.id === frontier ? `rgba(255,215,0,${0.5 + Math.sin(t * 4) * 0.3})` : 'rgba(0,212,255,0.8)';
       ctx.lineWidth = 3; blobPath(ctx, pts, cx, cy, r * 1.32, r * 1.02); ctx.stroke();
+    }
+    if (kbFocus) { // keyboard focus ring (companion toolbar), same yellow as the page focus outline
+      ctx.save(); ctx.setLineDash([8, 5]); ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 4;
+      blobPath(ctx, pts, cx, cy, r * 1.5, r * 1.18); ctx.stroke(); ctx.restore();
     }
     ctx.globalAlpha = unlocked ? 1 : 0.45; ctx.font = `${Math.round(28 * sc)}px Segoe UI Emoji, Apple Color Emoji, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(isl.icon, cx, cy - 2); ctx.globalAlpha = 1;
@@ -1928,8 +2428,9 @@ function drawIslandView() {
   // nodes
   for (let k = 0; k < 3; k++) {
     const id = `${isl.id}.${k + 1}`, L = SUBSTAGE_DATA[id], st = subStars(id), unlocked = isSubUnlocked(id), p = NP[k];
-    const state = st >= 1 ? 'done' : unlocked ? 'current' : 'locked', hover = UI.hoverNode === k;
+    const state = st >= 1 ? 'done' : unlocked ? 'current' : 'locked', kbFocus = UI.focusNode === k, hover = UI.hoverNode === k || kbFocus;
     const R = hover ? 40 : 36;
+    if (kbFocus) { ctx.save(); ctx.setLineDash([8, 5]); ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, p.y, R + 18, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
     ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(p.x + 3, p.y + R * 0.9, R * 0.9, 10, 0, 0, Math.PI * 2); ctx.fill();
     if (state === 'current') { ctx.strokeStyle = `rgba(255,215,0,${0.35 + Math.sin(t * 4) * 0.25})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(p.x, p.y, R + 10 + Math.sin(t * 4) * 3, 0, Math.PI * 2); ctx.stroke(); }
     const fill = state === 'done' ? ['#22c55e', '#15803d'] : state === 'current' ? ['#facc15', '#ca8a04'] : ['#6b7280', '#374151'];
@@ -2148,6 +2649,7 @@ function drawPuzzleMap(dt) {
   } else sb.style.display = 'none';
 }
 function spawnParticles(x, y, color, n) {
+  if (effectsReduced()) return; // reduced motion / calm mode: no particle bursts (state changes are still shown)
   for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, s = 40 + Math.random() * 110; UI.particles.push({ x: x * TILE + 24, y: y * TILE + 24, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 80, r: 2 + Math.random() * 3, c: color, life: 0.6 + Math.random() * 0.5 }); }
 }
 function showSpeech(text, agentIdx) { const sb = $('speech-bubble'); sb.textContent = text; UI.bubbleAgent = agentIdx || 0; UI.bubbleUntil = performance.now() + 1800; }
@@ -2156,7 +2658,10 @@ function setWorld(w, snap) {
   // Seed display positions from the start tiles now, so the first step of a run is eased rather than snapped
   if (snap) UI.disp = w.agents.map(a => ({ x: a.x, y: a.y, ang: a.dir * Math.PI / 2, tp: a.tp }));
   refreshObjectives();
+  describeCanvas();
 }
+// Text alternative for the puzzle canvas: updated when a map is shown and when a run ends (never per frame)
+function describeCanvas() { const L = currentLevel(); if (L && UI.world) $('gameCanvas').setAttribute('aria-label', describeWorld(L, UI.world)); }
 
 // ==========================================
 // 4. DRAG & DROP BLOCK AST ENGINE
@@ -2328,17 +2833,74 @@ function nodeToEl(n) {
   return el;
 }
 function readWorkspaceAST() { return readSlot($('program-root')); }
-function loadProgram(ast) {
+function loadProgram(ast, from) {
   const root = $('program-root'); root.innerHTML = '';
-  (ast || []).forEach(n => { try { const e = nodeToEl(n); if (e) root.appendChild(e); } catch (err) { /* skip broken saved block */ } });
+  const clean = sanitizeAST(ast);
+  if (clean.dropped && from) { // tell the learner, and keep the original save so nothing valid is lost silently
+    keepRecoveryCopy(from, ast);
+    consoleLog(`⚠️ ${clean.dropped} saved block${clean.dropped === 1 ? '' : 's'} for this stage could not be loaded and ${clean.dropped === 1 ? 'was' : 'were'} skipped. A copy of the original save was kept.`, 'err');
+  }
+  clean.ast.forEach(n => { try { const e = nodeToEl(n); if (e) root.appendChild(e); } catch (err) { /* sanitised: should not happen */ } });
   onProgramChanged();
+}
+// Saved-program validation (pure). Keeps every valid block, repairs field types, drops only unknown or
+// unusable blocks (counted in "dropped"). Valid blocks inside a damaged parent are kept wherever possible.
+const AST_ACTIONS = ['moveForward', 'turnLeft', 'turnRight', 'collectGem', 'collectKey', 'collectItem', 'toggleSwitch', 'attack', 'goTo'];
+function sanitizeAST(ast) {
+  let dropped = Array.isArray(ast) ? 0 : (ast == null ? 0 : 1), seq = 0;
+  const str = v => (v == null ? '' : typeof v === 'object' ? '' : String(v));
+  const arr = (v, d) => (Array.isArray(v) ? v.map(str) : d);
+  const cond = c => {
+    if (!c || typeof c !== 'object') return null;
+    switch (c.type) {
+      case 'SENSOR': return SENSORS[c.name] ? { type: 'SENSOR', name: c.name } : (dropped++, null);
+      case 'NOT': return { type: 'NOT', a: cond(c.a) };
+      case 'AND': case 'OR': return { type: c.type, a: cond(c.a), b: cond(c.b) };
+      case 'CMP': return { type: 'CMP', left: str(c.left), op: ['==', '!=', '>', '<', '>=', '<='].includes(c.op) ? c.op : '==', right: str(c.right) };
+    }
+    dropped++; return null;
+  };
+  const list = v => (Array.isArray(v) ? v : []).map(node).filter(Boolean);
+  const node = n => {
+    if (!n || typeof n !== 'object') { dropped++; return null; }
+    const id = typeof n.id === 'string' ? n.id : 'r' + (++seq), P = n.params;
+    switch (n.type) {
+      case 'ACTION':
+        if (!AST_ACTIONS.includes(n.command)) { dropped++; return null; }
+        return { id, type: 'ACTION', command: n.command, params: arr(P, n.command === 'moveForward' ? ['1'] : n.command === 'goTo' ? [''] : []) };
+      case 'REPEAT': return { id, type: 'REPEAT', params: arr(P, ['1']).slice(0, 1), children: list(n.children) };
+      case 'WHILE': return { id, type: 'WHILE', condition: cond(n.condition), children: list(n.children) };
+      case 'IF': { const o = { id, type: 'IF', condition: cond(n.condition), children: list(n.children) }; if (n.elseChildren !== undefined) o.elseChildren = list(n.elseChildren); return o; }
+      case 'FUNC_DEF': return { id, type: 'FUNC_DEF', name: str(n.name), paramNames: arr(n.paramNames, []), children: list(n.children) };
+      case 'CALL': return { id, type: 'CALL', name: str(n.name), args: arr(n.args, []) };
+      case 'FOREACH': return { id, type: 'FOREACH', name: str(n.name), list: str(n.list), children: list(n.children) };
+      case 'VAR_SET': case 'VAR_CHANGE': case 'PROP_SET': return { id, type: n.type, name: str(n.name), params: arr(P, ['']).slice(0, 1) };
+      case 'AGENT': return { id, type: 'AGENT', name: str(n.name) || '1' };
+      case 'SORT': return { id, type: 'SORT', list: str(n.list) };
+      case 'WORLD': return n.command === 'placeBlock' || n.command === 'spawnPortal' ? { id, type: 'WORLD', command: n.command, params: arr(P, []) } : (dropped++, null);
+    }
+    dropped++; return null;
+  };
+  const out = list(ast);
+  return { ast: out, dropped };
+}
+const RECOVERY_KEY = 'ctquest_v3_recovered'; // originals of saved programs that could not be fully loaded
+function keepRecoveryCopy(subId, original) {
+  try {
+    const all = JSON.parse(localStorage.getItem(RECOVERY_KEY) || '{}');
+    (all[subId] = all[subId] || []).push({ at: new Date().toISOString(), program: original });
+    all[subId] = all[subId].slice(-3);
+    localStorage.setItem(RECOVERY_KEY, JSON.stringify(all));
+  } catch (e) { /* storage unavailable: nothing more we can keep */ }
 }
 function onProgramChanged() {
   if (RUN.running) return;
+  markErrorBlock(null);
   UI.ast = readWorkspaceAST();
   APP_STATE.programs[APP_STATE.currentSubstageId] = UI.ast;
   saveProgressToStorage();
   const n = countBlocks(UI.ast); $('block-count').textContent = n + (n === 1 ? ' block' : ' blocks');
+  refreshBlockA11y();
   refreshObjectives();
 }
 function highlightBlock(id) {
@@ -2354,10 +2916,18 @@ function renderTabs() {
   const tabs = $('category-tabs'); tabs.innerHTML = '';
   const entries = paletteEntries();
   CATEGORIES.forEach(c => {
-    const n = entries.filter(e => BLOCK_DEFS[e.key].cat === c.k).length;
-    const tab = document.createElement('div'); tab.className = 'cat-tab' + (UI.cat === c.k ? ' active' : '') + (n ? '' : ' empty');
+    const n = entries.filter(e => BLOCK_DEFS[e.key].cat === c.k).length, on = UI.cat === c.k;
+    const tab = document.createElement('button'); tab.type = 'button'; tab.className = 'cat-tab' + (on ? ' active' : '') + (n ? '' : ' empty');
     tab.dataset.cat = c.k; tab.innerHTML = `${c.label}<span class="cnt">${n}</span>`;
+    tab.setAttribute('role', 'tab'); tab.setAttribute('aria-selected', String(on)); tab.setAttribute('aria-controls', 'block-palette');
+    tab.setAttribute('aria-label', `${c.label.replace(/^\S+\s/, '')} blocks, ${n} available`); tab.tabIndex = on ? 0 : -1;
     tab.addEventListener('click', () => { UI.cat = c.k; renderTabs(); renderPalette(); });
+    tab.addEventListener('keydown', e => { // tablist pattern: arrows move between categories
+      const i = CATEGORIES.findIndex(x => x.k === c.k), d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      const j = d ? (i + d + CATEGORIES.length) % CATEGORIES.length : e.key === 'Home' ? 0 : e.key === 'End' ? CATEGORIES.length - 1 : -1;
+      if (j < 0) return; e.preventDefault();
+      UI.cat = CATEGORIES[j].k; renderTabs(); renderPalette(); tabs.querySelector(`[data-cat="${UI.cat}"]`).focus();
+    });
     tabs.appendChild(tab);
   });
 }
@@ -2365,7 +2935,12 @@ function renderPalette() {
   const pal = $('block-palette'); pal.innerHTML = '';
   const list = paletteEntries().filter(e => BLOCK_DEFS[e.key].cat === UI.cat);
   if (!list.length) { const d = document.createElement('div'); d.className = 'palette-empty'; d.textContent = `No ${UI.cat} blocks are needed in this sub-stage.`; pal.appendChild(d); return; }
-  list.forEach(e => { const el = createBlockEl(e.key, e.preset); el.dataset.preset = JSON.stringify(e.preset); pal.appendChild(el); });
+  list.forEach(e => {
+    const el = createBlockEl(e.key, e.preset); el.dataset.preset = JSON.stringify(e.preset);
+    el.tabIndex = 0; el.setAttribute('role', 'button'); el.setAttribute('aria-label', 'Add block: ' + blockElLabel(el)); el.setAttribute('aria-describedby', 'kb-help');
+    el.querySelectorAll('.blk-in').forEach(i => { i.tabIndex = -1; i.setAttribute('aria-hidden', 'true'); }); // palette inputs are display-only
+    pal.appendChild(el);
+  });
 }
 
 // ----- Touch & mouse drag-and-drop -----
@@ -2443,7 +3018,7 @@ function tapAdd(src) {
     if (!empty) { logToast('Drag sensor chips into the condition socket of an If / While block.'); return; }
     empty.appendChild(el);
   } else $('program-root').appendChild(el);
-  el.animate && el.animate([{ transform: 'scale(.8)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 180 });
+  el.animate && !effectsReduced() && el.animate([{ transform: 'scale(.8)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 180 });
   onProgramChanged();
 }
 function initDragAndDrop() {
@@ -2477,13 +3052,14 @@ function initDragAndDrop() {
 // 5. SUB-STAGE PUZZLE INTERPRETER (UI controller; engine above)
 // ==========================================
 const STEP_MS = [0, 650, 420, 260, 140, 60], FLOW_MS = [0, 240, 150, 90, 45, 15];
-const RUN = { running: false, runner: null, seed: 1, ast: [], token: 0 };
+const RUN = { running: false, finishing: false, runner: null, seed: 1, ast: [], token: 0 };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const newSeed = () => (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
 function initSubstagePuzzle(subId) {
   const L = SUBSTAGE_DATA[subId];
   abandonRun();
-  RUN.seed = newSeed(); UI.hintShown = false; UI.particles = [];
+  RUN.seed = newSeed(); UI.hintStep = 0; UI.revealBackup = null; UI.revealed = false; UI.particles = []; UI.failedRuns = 0;
+  hideFeedbackPanel(); FB.errorNode = null;
   const firstCat = CATEGORIES.find(c => paletteEntries().some(e => BLOCK_DEFS[e.key].cat === c.k));
   UI.cat = firstCat ? firstCat.k : 'action';
   renderTabs(); renderPalette();
@@ -2492,29 +3068,45 @@ function initSubstagePuzzle(subId) {
   $('obj-goal').textContent = L.text;
   $('console-output').innerHTML = '';
   if (window.matchMedia && matchMedia('(max-width: 600px), (max-height: 500px)').matches) { // small screens: keep the map visible
-    $('objective-box').classList.add('collapsed'); $('obj-toggle').textContent = '▸ show';
+    $('objective-box').classList.add('collapsed'); $('obj-toggle').textContent = '▸ show'; $('obj-toggle').setAttribute('aria-expanded', 'false');
   }
   consoleLog(`🏝 Island ${L.island}: ${WORLD_ISLANDS[L.island - 1].name} - Sub-stage ${L.id} "${L.title}"`, 'info');
   consoleLog('🎯 ' + L.goal);
   if (L.mazeSeeds && L.mazeSeeds.length > 1) consoleLog(`🧩 Your program will be tested on ${L.mazeSeeds.length} different mazes.`, 'info');
   if (L.randomFill) consoleLog('🎲 This map changes every time you press Run.', 'info');
   setWorld(buildWorld(L, RUN.seed, 0), true);
-  loadProgram(APP_STATE.programs[subId] || []);
-  computeTargets(L, RUN.seed).then(refreshObjectives);
+  loadProgram(APP_STATE.programs[subId] || [], subId);
+  computeTargets(L, RUN.seed).then(refreshObjectives).catch(e => console.error('[Code Odyssey] computeTargets failed', e));
 }
 async function computeTargets(L, seed) {
   const sol = solutionAST(L), r = await simulate(L, sol, seed, {});
-  L.targetSteps = r.steps; L.optimalBlocks = countBlocks(sol);
+  L.optimalBlocks = countBlocks(sol);
+  if (r.ok) { L.targetSteps = r.steps; L.targetError = null; }
+  else { // never turn a failed reference run into a star threshold
+    L.targetSteps = null; L.targetError = r.error;
+    console.error(`[Code Odyssey] Reference solution for ${L.id} failed on seed ${seed}: ${r.error}. The step target is unavailable for this map.`);
+  }
   return r;
 }
 function refreshObjectives() {
   const L = currentLevel(), w = UI.world; if (!L || !w || w.level !== L) return;
   const objs = evalObjectives(L, w, RUN.running ? RUN.ast : UI.ast);
-  $('obj-list').innerHTML = objs.map(o => `<div class="obj-item${o.done ? ' done' : ''}"><span class="tick">${o.done ? '✔' : '○'}</span><span>${escapeHtml(o.label)}</span></div>`).join('');
+  $('obj-list').innerHTML = objs.map(o => `<div class="obj-item${o.done ? ' done' : ''}"><span class="tick" aria-hidden="true">${o.done ? '✔' : '○'}</span><span><span class="sr-only">${o.done ? 'Done: ' : 'To do: '}</span>${escapeHtml(o.label)}</span></div>`).join('');
   const vars = Object.keys(w.vars);
   $('obj-data').innerHTML = vars.length ? vars.map(k => `${escapeHtml(k)} = ${escapeHtml(fmtVal(w.vars[k]))}`).join('<br>') : '';
   const multi = L.mazeSeeds && L.mazeSeeds.length > 1 ? ` · Maze ${w.variant + 1}/${L.mazeSeeds.length}` : '';
-  $('obj-meta').innerHTML = `Steps: ${w.steps}${multi}<br>⭐⭐ ≤ ${L.targetSteps != null ? (L.randomFill ? '~' : '') + L.targetSteps : '…'} steps · ⭐⭐⭐ ≤ ${L.optimalBlocks != null ? L.optimalBlocks : '…'} blocks`;
+  const stepT = L.targetError ? 'n/a' : L.targetSteps != null ? (L.randomFill ? '~' : '') + L.targetSteps : '…';
+  $('obj-meta').innerHTML = `Steps: ${w.steps}${multi}<br>⭐ all goals · +⭐ steps ≤ ${stepT}${stepTargetNote(L)} · +⭐ blocks ≤ ${L.optimalBlocks != null ? L.optimalBlocks : '…'}`;
+  if (!RUN.running) renderLearningCard();
+}
+// "Before you code" learning card (collapsed by default; native <details> is keyboard- and screen-reader-friendly)
+function renderLearningCard() {
+  const L = currentLevel(), body = $('learn-body'); if (!L || !body) return;
+  const c = learningCard(L), li = a => a.map(t => `<li>${escapeHtml(t)}</li>`).join('');
+  body.innerHTML = `<p><b>Goal:</b> ${escapeHtml(c.goal)}</p><p><b>Concept:</b> ${escapeHtml(c.concept)}</p>` +
+    `<p><b>You succeed when:</b></p><ul>${li(c.objectives)}</ul><p><b>Stars:</b></p><ul>${li(c.stars)}</ul>` +
+    `<p><b>Blocks you can use:</b> ${escapeHtml(c.blocks.join(', '))}</p>`;
+  body.dataset.stage = L.id;
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 function consoleLog(msg, cls) {
@@ -2546,40 +3138,62 @@ function handleWorldEvent(ev, w) {
   }
 }
 async function runProgram() {
-  if (RUN.running) return;
+  if (RUN.running || RUN.finishing) return; // finishing = a cleared run is being scored; never overlap two victories
   hideVictory();
   const L = currentLevel(), ast = readWorkspaceAST();
   UI.ast = ast;
-  if (!ast.length) { consoleLog('⚠️ Your program is empty - drag blocks from the palette into the workspace.', 'err'); showSpeech('What should I do?'); return; }
+  if (!ast.length) {
+    consoleLog('⚠️ Your program is empty - drag blocks from the palette into the workspace.', 'err'); showSpeech('What should I do?');
+    showRunFeedback({ category: 'empty', title: 'Your program is empty', happened: 'There are no blocks in the Program area yet.', expected: objectiveNames(L),
+      why: 'The agent only does what your blocks tell it to do.', next: 'Drag a block from the palette (or tap it) into the Program area, then press ▶ Run.', nodeId: null });
+    return;
+  }
   if (L.randomFill) RUN.seed = newSeed();
   const token = ++RUN.token;
-  RUN.running = true; RUN.ast = ast; setRunUI(true);
+  RUN.running = true; RUN.ast = ast; RUN.lastNode = null; RUN.log = []; setRunUI(true);
+  markErrorBlock(null); if (FB.mode === 'error') hideFeedbackPanel();
   consoleLog('▶ Running program…', 'info');
-  const res = await simulate(L, ast, RUN.seed, {
-    onWorld: async (w, v, n) => { setWorld(w, true); if (n > 1) { consoleLog(`🧩 Maze variant ${v + 1} of ${n}`, 'info'); if (v > 0) await sleep(450); } },
-    setRunner: r => { RUN.runner = r; },
-    wait: kind => sleep(kind === 'flow' ? FLOW_MS[UI.speed] : STEP_MS[UI.speed]).then(refreshObjectives),
-    highlight: id => highlightBlock(id),
-    event: (ev, w) => handleWorldEvent(ev, w),
-    log: (m, c) => consoleLog(m, c)
-  });
+  let res;
+  try {
+    res = await simulate(L, ast, RUN.seed, {
+      onWorld: async (w, v, n) => { RUN.lastNode = null; RUN.log = []; setWorld(w, true); if (n > 1) { consoleLog(`🧩 Maze variant ${v + 1} of ${n}`, 'info'); if (v > 0) await sleep(450); } },
+      setRunner: r => { RUN.runner = r; },
+      wait: kind => sleep(kind === 'flow' ? FLOW_MS[UI.speed] : STEP_MS[UI.speed]).then(refreshObjectives),
+      highlight: id => { RUN.lastNode = id; highlightBlock(id); },
+      event: (ev, w) => handleWorldEvent(ev, w),
+      log: (m, c) => { RUN.log.push(m); consoleLog(m, c); }
+    });
+  } catch (e) { // an unexpected error must never leave the workbench stuck in "Running…"
+    console.error('[Code Odyssey] run failed unexpectedly', e);
+    res = { ok: false, unexpected: true, error: 'Something unexpected went wrong while running (' + (e && e.message ? e.message : e) + '). Press ↺ Reset and try again.' };
+  }
   if (token !== RUN.token) return; // superseded (user navigated away)
   highlightBlock(null);
-  RUN.running = false; RUN.runner = null; setRunUI(false); refreshObjectives();
+  RUN.running = false; RUN.runner = null; setRunUI(false); refreshObjectives(); describeCanvas();
   if (APP_STATE.currentView !== 'WORKBENCH' || currentLevel() !== L) return;
-  if (res.stopped) { consoleLog('⏹ Program stopped.', 'info'); return; }
+  if (res.stopped) { consoleLog('⏹ Program stopped.', 'info'); showRunFeedback(classifyRunResult(L, res, ast, { nodeId: RUN.lastNode, log: RUN.log })); return; }
   if (!res.ok) {
+    UI.failedRuns = (UI.failedRuns || 0) + 1;
     consoleLog('❌ ' + res.error, 'err'); showSpeech(res.incomplete ? 'Not finished yet…' : 'Oops!');
     const gp = $('game-panel'); gp.classList.remove('shake'); void gp.offsetWidth; gp.classList.add('shake');
+    let fb;
+    try { fb = classifyRunResult(L, res, ast, { nodeId: RUN.lastNode, log: RUN.log }); }
+    catch (e) { console.error('[Code Odyssey] feedback failed', e); fb = { category: 'other', title: 'The program stopped', happened: res.error, expected: [], why: '', next: 'Check your blocks and press ▶ Run again.', nodeId: null }; }
+    markErrorBlock(fb.nodeId); showRunFeedback(fb);
     return;
   }
   consoleLog(`✅ All objectives complete in ${res.steps} steps!`, 'ok'); showSpeech('Yay! 🎉');
-  await computeTargets(L, RUN.seed);
-  await sleep(450);
-  if (APP_STATE.currentView === 'WORKBENCH' && currentLevel() === L) onSubstageVictory(L.id, res.steps, countBlocks(ast));
+  RUN.finishing = true;
+  try { await computeTargets(L, RUN.seed); }
+  catch (e) { console.error('[Code Odyssey] computeTargets failed', e); L.targetSteps = null; L.targetError = String(e && e.message || e); }
+  try {
+    await sleep(450);
+    if (APP_STATE.currentView === 'WORKBENCH' && currentLevel() === L) onSubstageVictory(L.id, res.steps, countBlocks(ast), ast);
+  } finally { RUN.finishing = false; }
 }
 function stopProgram() { if (RUN.runner) RUN.runner.stop(); }
 function abandonRun() { // stop and immediately release the UI (used when leaving a sub-stage)
+  RUN.finishing = false;
   if (!RUN.running) return;
   stopProgram(); RUN.token++; RUN.running = false; RUN.runner = null; setRunUI(false); highlightBlock(null);
 }
@@ -2591,11 +3205,12 @@ function resetPuzzle() {
 }
 
 // ---------- Star Evaluation & Unlocking ----------
-function onSubstageVictory(subId, stepsUsed, blocksUsed) {
+function onSubstageVictory(subId, stepsUsed, blocksUsed, ast) {
   const meta = SUBSTAGE_DATA[subId];
   let stars = 1; // 1 star for clearing puzzle
-  if (stepsUsed <= meta.targetSteps) stars++;
-  if (blocksUsed <= meta.optimalBlocks) stars++;
+  // Bonus stars only against a validated target (null = reference run failed / not yet computed)
+  if (meta.targetSteps != null && stepsUsed <= meta.targetSteps) stars++;
+  if (meta.optimalBlocks != null && blocksUsed <= meta.optimalBlocks) stars++;
   const prevBest = APP_STATE.completedSubstages[subId] || 0;
   APP_STATE.completedSubstages[subId] = Math.max(prevBest, stars);
   APP_STATE.totalStars = Object.values(APP_STATE.completedSubstages).reduce((a, b) => a + b, 0);
@@ -2609,7 +3224,7 @@ function onSubstageVictory(subId, stepsUsed, blocksUsed) {
   }
   saveProgressToStorage();
   updateHeaders();
-  showVictoryOverlay(subId, stars, { stepsUsed, blocksUsed, prevBest, newIsland });
+  showVictoryOverlay(subId, stars, { stepsUsed, blocksUsed, prevBest, newIsland, ast });
 }
 
 // ==========================================
@@ -2632,19 +3247,327 @@ function showVictoryOverlay(subId, stars, info) {
   st.forEach((s, i) => { if (i < stars) setTimeout(() => s.classList.add('on'), 150 + i * 220); });
   const eff = Math.round(100 * Math.min(1, (L.targetSteps || info.stepsUsed) / Math.max(1, info.stepsUsed)) * 0.6 + 100 * Math.min(1, (L.optimalBlocks || info.blocksUsed) / Math.max(1, info.blocksUsed)) * 0.4);
   $('v-score').textContent = `⭐ ${stars}/3 stars · Efficiency ${eff}%` + (info.prevBest > stars ? ` (best: ${info.prevBest}/3)` : '');
-  const okS = info.stepsUsed <= L.targetSteps, okB = info.blocksUsed <= L.optimalBlocks;
+  const hasS = L.targetSteps != null, okS = hasS && info.stepsUsed <= L.targetSteps, okB = info.blocksUsed <= L.optimalBlocks;
+  const stepTarget = hasS ? `target ≤ ${L.targetSteps}${stepTargetNote(L)}` : 'target unavailable for this map - run again to try for this star';
   $('v-stats').innerHTML =
-    `<div><span class="ok">✔</span> ⭐ Objectives cleared</div>` +
-    `<div><span class="${okS ? 'ok' : 'no'}">${okS ? '✔' : '✘'}</span> ⭐ Steps: ${info.stepsUsed} (target ≤ ${L.targetSteps})</div>` +
-    `<div><span class="${okB ? 'ok' : 'no'}">${okB ? '✔' : '✘'}</span> ⭐ Blocks: ${info.blocksUsed} (optimal ≤ ${L.optimalBlocks})</div>`;
+    `<div><span class="ok">✔</span> ⭐ Goals completed: ${escapeHtml(objectiveNames(L).join(' · '))}</div>` +
+    `<div><span class="${okS ? 'ok' : 'no'}">${okS ? '✔' : '✘'}</span> +⭐ Step efficiency: ${info.stepsUsed} step${info.stepsUsed === 1 ? '' : 's'} (${escapeHtml(stepTarget)})</div>` +
+    `<div><span class="${okB ? 'ok' : 'no'}">${okB ? '✔' : '✘'}</span> +⭐ Block efficiency: ${info.blocksUsed} block${info.blocksUsed === 1 ? '' : 's'} (target ≤ ${L.optimalBlocks})</div>`;
+  const learned = demonstrated(L);
+  $('v-learned').innerHTML = `<b>🎓 What you demonstrated: ${escapeHtml(learned.construct)}</b><br>${escapeHtml(learned.text)}`;
+  $('v-reflect').open = false; $('v-reflect').querySelector('details').open = false;
+  $('v-reflect-q').textContent = learned.reflect; $('v-reflect-a').textContent = learned.answer;
+  let tip = null;
+  try { tip = successFeedback(L, info.stepsUsed, info.blocksUsed, info.ast, { revealed: UI.revealed }).tip; } catch (e) { console.error(e); }
+  $('v-tip').textContent = tip ? '💡 ' + tip : '';
+  const sum = victorySummary(L, stars, { prevBest: info.prevBest, stepsUsed: info.stepsUsed, blocksUsed: info.blocksUsed, failedRuns: UI.failedRuns || 0, nextId: next, nextStars: next ? subStars(next) : 0 });
+  UI.failedRuns = 0; // the effort message is shown once per clear
+  const prog = [];
+  if (sum.personalBest) prog.push(`<div class="v-pb">🏅 ${escapeHtml(sum.personalBest)}</div>`);
+  if (sum.bestKept) prog.push(`<div>${escapeHtml(sum.bestKept)}</div>`);
+  if (sum.effort) prog.push(`<div>${escapeHtml(sum.effort)}</div>`);
+  if (sum.stillAvailable.length) prog.push(`<div><b>Replay to earn:</b><ul>${sum.stillAvailable.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul></div>`);
+  $('v-progress').innerHTML = prog.join('');
+  $('v-next').innerHTML = sum.next ? `<b>Next coding challenge:</b> ${escapeHtml(sum.next.id)} ${escapeHtml(sum.next.title)} · ${escapeHtml(sum.next.construct)}` +
+    (sum.next.newIsland ? ` <span class="v-next-isl">(new island: ${escapeHtml(sum.next.island)}, ${escapeHtml(sum.next.concept)})</span>` : '') +
+    (sum.next.cleared ? ` <span class="v-next-isl">(already cleared: ${sum.next.cleared}/3 stars)</span>` : '')
+    : '<b>🏆 You have reached the end of the voyage.</b> Replay any stage from the map to improve your stars.';
+  announce(`Sub-stage ${subId} clear! ${stars} of 3 stars. ${sum.personalBest || ''} You demonstrated: ${learned.construct}. ${tip || ''} ${sum.next ? 'Next challenge: ' + sum.next.title + '.' : ''}`);
   $('v-unlock').textContent = info.newIsland ? `🏝 Island ${info.newIsland}: ${WORLD_ISLANDS[info.newIsland - 1].name} unlocked on the World Map!` : (L.sub < 3 ? `🔓 Sub-stage ${next} unlocked` : '');
   const btn = $('btnNextSub');
-  btn.textContent = next ? 'Next Sub-stage ▶' : '🏆 World Map';
+  btn.textContent = next ? `Next: ${next} ▶` : '🏆 World Map';
+  btn.setAttribute('aria-label', next ? `Next sub-stage ${next}: ${SUBSTAGE_DATA[next].title}` : 'World Map');
   btn.onclick = () => { hideVictory(); next ? launchSubstage(next) : showWorldMap(); };
   $('victory-overlay').classList.add('show');
+  openModal($('victory-overlay'), $('btnNextSub'));
   if (info.newIsland) logToast(`🏝 Island ${info.newIsland} unlocked!`);
 }
-function hideVictory() { $('victory-overlay').classList.remove('show'); }
+function hideVictory() { $('victory-overlay').classList.remove('show'); closeModal($('victory-overlay')); }
+
+// ---------- Debugging & hint panel (non-blocking; text is also announced to screen readers) ----------
+const FB = { mode: null, errorNode: null }; // mode: 'error' | 'hint' | 'info' | null
+function announce(msg) {
+  const r = $('sr-live'); if (!r) return;
+  r.textContent = ''; setTimeout(() => { r.textContent = msg; }, 50);
+}
+// view = { kind, title, rows: [{ label?, text }], actions: [{ label, fn, primary? }], announce? }
+function renderFeedbackPanel(view) {
+  const p = $('feedback-panel'); FB.mode = view.kind;
+  p.className = 'fb-' + view.kind; p.hidden = false;
+  $('fb-title').textContent = view.title;
+  const more = $('fb-more'); more.textContent = 'Details ▾'; more.setAttribute('aria-expanded', 'false');
+  const body = $('fb-body'); body.innerHTML = '';
+  (view.rows || []).forEach(r => {
+    const d = document.createElement('div'); d.className = 'fb-row' + (r.key ? ' fb-key' : '');
+    if (r.label) { const b = document.createElement('b'); b.textContent = r.label + ' '; d.appendChild(b); }
+    d.appendChild(document.createTextNode(r.text)); body.appendChild(d);
+  });
+  const act = $('fb-actions'); act.innerHTML = '';
+  (view.actions || []).forEach(a => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = a.primary ? 'btn-primary' : 'btn-secondary';
+    b.textContent = a.label; b.addEventListener('click', a.fn); act.appendChild(b);
+  });
+  p.scrollTop = 0;
+  if (view.announce) announce(view.announce);
+}
+function hideFeedbackPanel() { const p = $('feedback-panel'); if (p) p.hidden = true; FB.mode = null; }
+function markErrorBlock(id) { // outline the block involved in a failure (only when the engine identified one)
+  document.querySelectorAll('.err-block').forEach(e => e.classList.remove('err-block'));
+  FB.errorNode = null; if (!id) return;
+  const el = document.querySelector(`[data-nid="${id}"]`);
+  if (el) { el.classList.add('err-block'); FB.errorNode = id; if (el.scrollIntoView) el.scrollIntoView({ block: 'nearest' }); }
+}
+function showRunFeedback(fb) {
+  const rows = [{ label: 'What happened:', text: fb.happened }];
+  if (fb.expected && fb.expected.length) rows.push({ label: 'Goal not met yet:', text: fb.expected.join(' · ') });
+  if (fb.why) rows.push({ label: 'Why:', text: fb.why });
+  rows.push({ label: 'Try next:', text: fb.next, key: true }); // the row kept visible on small screens
+  if (fb.category !== 'stopped' && fb.category !== 'empty') rows.push({ text: 'Your blocks have not been changed: edit them and press ▶ Run again.' });
+  renderFeedbackPanel({ kind: 'error', title: '🔍 ' + fb.title, rows,
+    actions: [{ label: '💡 Get a hint', fn: () => showHint(Math.max(1, UI.hintStep)) }],
+    announce: `${fb.title}. ${fb.next}` });
+}
+function showHint(step) {
+  const L = currentLevel(), h = hintStep(L, step);
+  UI.hintStep = h.step;
+  const actions = [];
+  if (h.step > 1) actions.push({ label: '◂ Previous hint', fn: () => showHint(h.step - 1) });
+  if (h.step < 3) actions.push({ label: `Next hint (${h.step + 1} of 3) ▸`, primary: true, fn: () => showHint(h.step + 1) });
+  else if (UI.revealBackup) actions.push({ label: '↶ Restore my blocks', primary: true, fn: restoreBeforeReveal });
+  else actions.push({ label: '🧩 Show the reference solution…', fn: confirmReveal });
+  renderFeedbackPanel({ kind: 'hint', title: '💡 ' + h.title, rows: h.lines.map(text => ({ text })), actions, announce: h.title + '. ' + h.lines[0] });
+  if (h.step === 3) consoleLog('💡 Hint: ' + L.hint, 'info');
+}
+function onHintButton() { // 3-step scaffold: each press goes one step further; reopening resumes where the learner was
+  showHint(FB.mode === 'hint' ? Math.min(3, UI.hintStep + 1) : Math.max(1, UI.hintStep));
+}
+function confirmReveal() {
+  if (RUN.running) { renderFeedbackPanel({ kind: 'info', title: 'Program running', rows: [{ text: 'Wait for the run to finish (or press ⏹ Stop) before loading the solution.' }] }); return; }
+  renderFeedbackPanel({ kind: 'hint', title: '🧩 Replace your blocks with the reference solution?', rows: [
+    { text: 'This puts the Captain\'s reference solution in your Program area in place of your current blocks.' },
+    { text: 'You can put your own blocks back afterwards with ↶ Restore my blocks.' },
+    { text: 'Stars are only awarded after you press ▶ Run and every goal is met. Solutions you build yourself are remembered much better!' }
+  ], actions: [
+    { label: 'Keep my blocks', primary: true, fn: () => showHint(3) },
+    { label: 'Replace with solution', fn: revealSolution }
+  ], announce: 'Confirm: replace your blocks with the reference solution?' });
+}
+function revealSolution() {
+  if (RUN.running) return;
+  const L = currentLevel();
+  UI.revealBackup = JSON.parse(JSON.stringify(readWorkspaceAST())); UI.revealed = true;
+  loadProgram(solutionAST(L));
+  consoleLog('🧩 Reference solution loaded - press ▶ Run Code. Use ↶ Restore my blocks to undo.', 'info');
+  renderFeedbackPanel({ kind: 'hint', title: '🧩 Reference solution loaded', rows: [
+    { text: 'Read it block by block: which part handles which goal? Then press ▶ Run to watch it work.' },
+    { text: 'Your previous blocks are saved. You can restore them at any time.' }
+  ], actions: [{ label: '↶ Restore my blocks', primary: true, fn: restoreBeforeReveal }], announce: 'Reference solution loaded. Your previous blocks can be restored.' });
+}
+function restoreBeforeReveal() {
+  if (RUN.running || !UI.revealBackup) return;
+  loadProgram(UI.revealBackup); UI.revealBackup = null; UI.revealed = false;
+  consoleLog('↶ Your own blocks are back.', 'info');
+  renderFeedbackPanel({ kind: 'info', title: '↶ Your blocks are back', rows: [{ text: 'Your program is exactly as it was before the solution was shown.' }],
+    actions: [{ label: '💡 Hints', fn: () => showHint(Math.max(1, UI.hintStep)) }], announce: 'Your own blocks have been restored.' });
+}
+
+// ==========================================
+// Stage 04: keyboard access (block editing without a pointer, canvas companions, dialogs)
+// Pointer drag-and-drop and tap-to-add are unchanged; these are additional routes to the same DOM.
+// ==========================================
+const RM = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+const CALM_KEY = 'codeodyssey_calm'; // per-device display preference (separate from saved progress)
+function effectsReduced() { return RM.matches || !!UI.calm; }
+function loadCalm() { try { UI.calm = localStorage.getItem(CALM_KEY) === '1'; } catch (e) { UI.calm = false; } document.documentElement.classList.toggle('calm', UI.calm); }
+function setCalm(on) { UI.calm = !!on; document.documentElement.classList.toggle('calm', UI.calm); try { localStorage.setItem(CALM_KEY, UI.calm ? '1' : '0'); } catch (e) { /* kept for this session */ } UI.particles = []; announce(UI.calm ? 'Calm mode on: fewer effects.' : 'Calm mode off.'); }
+// Readable text for a block element, e.g. "Repeat 4 times" or "If (isPathClear)"
+function blockElLabel(el) {
+  const def = BLOCK_DEFS[el.dataset.key]; if (!def) return 'block';
+  const row = el.querySelector(':scope > .blk-row'), f = fieldVals(el);
+  const txt = def.parts.map(p => {
+    if (typeof p === 'string') return p;
+    if (p.cond) { const s = row && row.querySelector(`:scope > .cond-socket[data-sock="${p.cond}"]`), c = s && [...s.children].find(x => x.classList.contains('blk')); return c ? '(' + blockElLabel(c) + ')' : '(empty condition)'; }
+    return f[p.f] != null && f[p.f] !== '' ? f[p.f] : '…';
+  }).join(' ');
+  return txt.replace(/\s*\(\s*/g, ' (').replace(/\s*\)\s*/g, ') ').replace(/\s+([,)])/g, '$1').replace(/\s+/g, ' ').trim();
+}
+const blkChildren = slot => [...slot.children].filter(c => c.classList.contains('blk'));
+const blkSlots = b => [...b.children].filter(c => c.classList.contains('block-slot'));
+function blockPlace(el) { // "2 of 3 inside Repeat 4 times" - used in labels and announcements
+  const slot = el.parentElement, host = slot && slot.closest('.blk');
+  if (el.classList.contains('chip')) return `condition of ${host ? blockElLabel(host) : 'a block'}`;
+  const sibs = blkChildren(slot);
+  return `${sibs.indexOf(el) + 1} of ${sibs.length}` + (host ? ` inside ${blockElLabel(host)}${slot.dataset.slot === 'else' ? ' (Else part)' : ''}` : ' in the program');
+}
+function refreshBlockA11y() {
+  const root = $('program-root'); if (!root) return;
+  if (UI.kbSel && !root.contains(UI.kbSel)) UI.kbSel = null;
+  root.querySelectorAll('.blk').forEach(el => {
+    el.tabIndex = 0; el.setAttribute('role', 'group'); el.setAttribute('aria-describedby', 'kb-help');
+    el.setAttribute('aria-label', `${blockElLabel(el)}, ${blockPlace(el)}`);
+    el.classList.toggle('kb-sel', el === UI.kbSel);
+  });
+}
+function focusBlock(el) { if (!el) return; UI.kbSel = el; refreshBlockA11y(); el.focus(); }
+function kbAddFromPalette(src, inside) {
+  if (RUN.running) { announce('Stop the program (⏹ Stop) before editing blocks.'); return null; }
+  const el = createBlockEl(src.dataset.key, JSON.parse(src.dataset.preset || '{}'));
+  const root = $('program-root'), sel = UI.kbSel && root.contains(UI.kbSel) ? UI.kbSel : null;
+  let where;
+  if (el.classList.contains('chip')) { // conditions go into the first empty socket of the selected block, else of the program
+    let sock = null;
+    for (const s of sel ? [sel, root] : [root]) { sock = [...s.querySelectorAll('.cond-socket')].find(k => !k.querySelector('.blk')); if (sock) break; }
+    if (!sock) { announce('There is no empty condition socket. Add an If or While block first.'); logToast('Add an If or While block first: conditions go into its socket.'); return null; }
+    sock.appendChild(el); where = 'as the condition of ' + blockElLabel(sock.closest('.blk'));
+  } else {
+    const host = sel && sel.classList.contains('chip') ? sel.closest('.blk:not(.chip)') : sel;
+    const slot = host && inside ? blkSlots(host)[0] : null;
+    if (slot) { slot.appendChild(el); where = 'inside ' + blockElLabel(host); }
+    else if (host) { host.parentElement.insertBefore(el, host.nextSibling); where = 'after ' + blockElLabel(host); }
+    else { root.appendChild(el); where = 'at the end of the program'; }
+  }
+  UI.kbSel = el;
+  onProgramChanged();
+  announce(`${blockElLabel(el)} added ${where}.`);
+  return el;
+}
+function kbMove(el, dir) { // dir -1 = up, +1 = down; walks into/out of loop bodies at their edges
+  if (el.classList.contains('chip')) return null;
+  const slot = el.parentElement, sibs = blkChildren(slot), i = sibs.indexOf(el), sib = sibs[i + dir];
+  if (sib) { slot.insertBefore(el, dir < 0 ? sib : sib.nextSibling); return 'moved ' + (dir < 0 ? 'up' : 'down'); }
+  const parent = slot.closest('.blk'); if (!parent) return null;
+  const slots = blkSlots(parent), other = slots[slots.indexOf(slot) + dir];
+  if (other) { dir < 0 ? other.appendChild(el) : other.insertBefore(el, blkChildren(other)[0] || null); return 'moved into the ' + (other.dataset.slot === 'else' ? 'Else part' : 'first part') + ' of ' + blockElLabel(parent); }
+  parent.parentElement.insertBefore(el, dir < 0 ? parent : parent.nextSibling); return 'moved out of ' + blockElLabel(parent);
+}
+function kbIndent(el) { // into the block above (end of its first slot)
+  if (el.classList.contains('chip')) return null;
+  const sibs = blkChildren(el.parentElement), prev = sibs[sibs.indexOf(el) - 1], slot = prev && blkSlots(prev)[0];
+  if (!slot) return null;
+  slot.appendChild(el); return 'moved inside ' + blockElLabel(prev);
+}
+function kbOutdent(el) {
+  if (el.classList.contains('chip')) return null;
+  const parent = el.parentElement.closest('.blk'); if (!parent) return null;
+  parent.parentElement.insertBefore(el, parent.nextSibling); return 'moved out of ' + blockElLabel(parent);
+}
+function kbDelete(el) {
+  const all = [...$('program-root').querySelectorAll('.blk')], i = all.indexOf(el), label = blockElLabel(el);
+  const next = all.slice(i + 1).find(b => !el.contains(b)) || all.slice(0, i).reverse().find(b => !b.contains(el)) || all.slice(0, i).reverse()[0];
+  el.remove(); UI.kbSel = next && document.contains(next) ? next : null;
+  onProgramChanged(); consoleLog('🗑 Block deleted.');
+  if (UI.kbSel) UI.kbSel.focus(); else { const p = document.querySelector('#block-palette .blk'); if (p) p.focus(); }
+  announce(`${label} deleted.`);
+}
+function bindKeyboardEditing() {
+  const root = $('program-root'), pal = $('block-palette');
+  pal.addEventListener('keydown', e => {
+    const b = e.target instanceof Element && e.target.classList.contains('blk') ? e.target : null;
+    if (!b || (e.key !== 'Enter' && e.key !== ' ') || e.ctrlKey || e.metaKey) return;
+    e.preventDefault(); kbAddFromPalette(b, e.shiftKey);
+  });
+  root.addEventListener('focusin', e => { const b = e.target instanceof Element && e.target.closest('.blk'); if (b && root.contains(b) && UI.kbSel !== b) { UI.kbSel = b; refreshBlockA11y(); } });
+  root.addEventListener('keydown', e => {
+    const el = e.target; if (!(el instanceof Element) || !el.classList.contains('blk') || e.ctrlKey || e.metaKey || e.altKey) return;
+    const all = [...root.querySelectorAll('.blk')], i = all.indexOf(el);
+    const edit = fn => { e.preventDefault(); if (RUN.running) { announce('Stop the program before editing blocks.'); return; } const msg = fn(el); if (!msg) { announce('That block cannot move that way.'); return; } onProgramChanged(); focusBlock(el); announce(`${blockElLabel(el)} ${msg}: now ${blockPlace(el)}.`); };
+    if (e.shiftKey && e.key === 'ArrowUp') edit(x => kbMove(x, -1));
+    else if (e.shiftKey && e.key === 'ArrowDown') edit(x => kbMove(x, 1));
+    else if (e.shiftKey && e.key === 'ArrowRight') edit(kbIndent);
+    else if (e.shiftKey && e.key === 'ArrowLeft') edit(kbOutdent);
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const t = all[i + (e.key === 'ArrowDown' ? 1 : -1)]; if (t) focusBlock(t); }
+    else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); focusBlock(e.key === 'Home' ? all[0] : all[all.length - 1]); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); if (RUN.running) announce('Stop the program before editing blocks.'); else kbDelete(el); }
+  });
+}
+
+// ----- Canvas companions: keyboard / screen-reader route to the world map and island view -----
+function renderCanvasNav() {
+  const wm = $('wm-nav'), iv = $('iv-nav'); if (!wm || !iv) return;
+  const kept = wm.contains(document.activeElement) || iv.contains(document.activeElement) ? document.activeElement : null;
+  if (kept) return; // never rebuild under the learner's keyboard focus
+  $('world-map-canvas').setAttribute('aria-label', `World map: ${APP_STATE.unlockedIslands.length} of 12 islands unlocked, ${APP_STATE.totalStars} of ${MAX_STARS} stars. Use the island buttons after the map to open an island.`);
+  const curI = currentFrontierIsland(); wm.innerHTML = '';
+  WORLD_ISLANDS.forEach(isl => {
+    const b = document.createElement('button'), open = isIslandUnlocked(isl.id);
+    b.type = 'button'; b.dataset.island = isl.id; b.tabIndex = isl.id === curI ? 0 : -1;
+    b.textContent = `Island ${isl.id}: ${isl.name}. ${isl.concept}. ` + (open ? `${isIslandComplete(isl.id) ? 'Complete' : 'Unlocked'}, ${islandStars(isl.id)} of 9 stars.` : `Locked: clear island ${isl.id - 1} first.`);
+    if (!open) b.setAttribute('aria-disabled', 'true');
+    wm.appendChild(b);
+  });
+  const isl = WORLD_ISLANDS[APP_STATE.currentIslandId - 1];
+  $('island-canvas').setAttribute('aria-label', `Island ${isl.id}: ${isl.name}, 3 sub-stages, ${islandStars(isl.id)} of 9 stars. Use the sub-stage buttons after the map to open one.`);
+  iv.innerHTML = '';
+  const ids = [1, 2, 3].map(k => `${isl.id}.${k}`), curS = ids.find(id => isSubUnlocked(id) && !subStars(id)) || ids[0];
+  ids.forEach((id, k) => {
+    const L = SUBSTAGE_DATA[id], st = subStars(id), open = isSubUnlocked(id), b = document.createElement('button');
+    b.type = 'button'; b.dataset.sub = id; b.dataset.node = k; b.tabIndex = id === curS ? 0 : -1;
+    b.textContent = `Sub-stage ${id}, ${L.kind}: ${L.title}. ` + (st ? `Completed, ${st} of 3 stars.` : open ? 'Unlocked, not completed yet.' : `Locked: clear ${isl.id}.${k} first.`);
+    if (!open) b.setAttribute('aria-disabled', 'true');
+    iv.appendChild(b);
+  });
+}
+function bindCanvasCompanions() {
+  const roving = (box, onFocus, onBlur, onActivate) => {
+    box.addEventListener('keydown', e => {
+      const btns = [...box.querySelectorAll('button')], i = btns.indexOf(document.activeElement);
+      const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      const j = d ? (i + d + btns.length) % btns.length : e.key === 'Home' ? 0 : e.key === 'End' ? btns.length - 1 : -1;
+      if (j < 0 || i < 0) return;
+      e.preventDefault(); btns.forEach((b, k) => { b.tabIndex = k === j ? 0 : -1; }); btns[j].focus();
+    });
+    box.addEventListener('focusin', e => { const b = e.target.closest('button'); if (b) onFocus(b); });
+    box.addEventListener('focusout', e => { if (!box.contains(e.relatedTarget)) onBlur(); });
+    box.addEventListener('click', e => { const b = e.target.closest('button'); if (b) onActivate(b); });
+  };
+  roving($('wm-nav'), b => { UI.focusIsland = +b.dataset.island; showIslandTip(UI.focusIsland, 'keyboard'); },
+    () => { UI.focusIsland = null; if (TIP.mode === 'keyboard') hideIslandTip(); },
+    b => { UI.focusIsland = null; selectIsland(+b.dataset.island); });
+  roving($('iv-nav'), b => { UI.focusNode = +b.dataset.node; }, () => { UI.focusNode = null; },
+    b => { UI.focusNode = null; launchSubstage(b.dataset.sub); });
+}
+// After a keyboard-driven screen change, put focus at the start of the new screen (pointer users are unaffected).
+function focusScreenStart() {
+  if (!UI.kbMode) return;
+  setTimeout(() => {
+    const a = document.activeElement;
+    if (a && a !== document.body && a.offsetParent !== null && !a.closest('.view-screen:not(.active)')) return;
+    const v = APP_STATE.currentView;
+    const t = v === 'WORLD_MAP' ? $('wm-nav').querySelector('[tabindex="0"]') : v === 'ISLAND_VIEW' ? $('iv-nav').querySelector('[tabindex="0"]') : $('category-tabs').querySelector('[aria-selected="true"]');
+    if (t) t.focus();
+  }, 0);
+}
+
+// ----- Dialog focus management: focus moves in, Tab stays inside, focus returns on close -----
+const MODALS = [];
+const focusablesIn = root => [...root.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+  .filter(e => !e.disabled && e.offsetParent !== null && getComputedStyle(e).visibility !== 'hidden');
+function openModal(overlay, initial) {
+  if (!MODALS.some(m => m.overlay === overlay)) MODALS.push({ overlay, returnTo: document.activeElement });
+  setTimeout(() => {
+    if (!MODALS.some(m => m.overlay === overlay)) return;
+    const t = initial && initial.offsetParent !== null && getComputedStyle(initial).visibility !== 'hidden' ? initial : focusablesIn(overlay)[0];
+    if (t) t.focus();
+  }, 0);
+}
+function closeModal(overlay) {
+  const i = MODALS.findIndex(m => m.overlay === overlay); if (i < 0) return;
+  const [m] = MODALS.splice(i, 1), r = m.returnTo;
+  if (MODALS.length) return;
+  if (r && r !== document.body && document.contains(r) && r.offsetParent !== null && !r.closest('.view-screen:not(.active)')) r.focus();
+  else focusScreenStart();
+}
+function bindModalKeys() {
+  document.addEventListener('keydown', e => { UI.kbMode = true;
+    if (e.key !== 'Tab' || !MODALS.length) return;
+    const ov = MODALS[MODALS.length - 1].overlay, f = focusablesIn(ov); if (!f.length) return;
+    const first = f[0], last = f[f.length - 1], a = document.activeElement;
+    if (!ov.contains(a)) { e.preventDefault(); first.focus(); }
+    else if (e.shiftKey && a === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
+  }, true);
+  document.addEventListener('pointerdown', () => { UI.kbMode = false; }, true);
+}
 
 // ---------- About window & Captain's Briefing ----------
 const APP_VERSION = '1.0';
@@ -2708,7 +3631,7 @@ const BRIEFING_PAGES = [
     text: 'Pick an unlocked island, then choose a sub-stage. Drag blocks from the palette into your program, then press ▶ Run Code to watch your agent follow your instructions. If something goes wrong, read the console, fix your blocks and try again – mistakes are how explorers learn!',
     chips: ['🖐 Drag → ▶ Run → 🔍 Check → 🔧 Fix'] },
   { title: 'Earn your stars, Captain-in-training!',
-    text: '⭐ Clear the puzzle. ⭐⭐ Use fewer steps. ⭐⭐⭐ Use the fewest blocks. Clear all 3 sub-stages on an island to unlock the next one. Stuck? Tap 💡 for a hint. Now, raise the anchor – your odyssey begins!',
+    text: '⭐ Clear the puzzle. +⭐ Stay within the step target. +⭐ Stay within the block target. Clear all 3 sub-stages on an island to unlock the next one. Stuck? Tap 💡 for a hint. Now, raise the anchor – your odyssey begins!',
     chips: ['⭐ 108 stars await you'] }
 ];
 const BRIEF = { open: false, page: 0, timer: null, typing: false, full: '' };
@@ -2736,7 +3659,7 @@ function showBriefing() {
   BRIEF.open = true;
   $('briefing-overlay').classList.add('show');
   renderBriefingPage(0);
-  setTimeout(() => { if (BRIEF.open) $('briefNext').focus(); }, 0);
+  openModal($('briefing-overlay'), $('briefNext'));
 }
 function hideBriefing(markSeen) {
   stopBriefTyping();
@@ -2744,6 +3667,7 @@ function hideBriefing(markSeen) {
   if (!BRIEF.open) return;
   BRIEF.open = false;
   $('briefing-overlay').classList.remove('show');
+  closeModal($('briefing-overlay'));
 }
 function renderBriefingPage(index) {
   const n = BRIEFING_PAGES.length, i = Math.max(0, Math.min(n - 1, index)), p = BRIEFING_PAGES[i], last = i === n - 1;
@@ -2761,7 +3685,7 @@ function renderBriefingPage(index) {
   stopBriefTyping();
   const textEl = $('brief-text'), chars = Array.from(p.text);
   BRIEF.full = p.text; textEl.scrollTop = 0;
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { textEl.textContent = p.text; return; }
+  if (effectsReduced()) { textEl.textContent = p.text; return; } // no typewriter in reduced motion / calm mode
   textEl.textContent = ''; BRIEF.typing = true; $('brief-captain').classList.add('brief-talking');
   let k = 0;
   BRIEF.timer = setInterval(() => {
@@ -2785,18 +3709,20 @@ function showAbout() {
   aboutOpen = true;
   $('about-overlay').classList.add('show');
   $('about-scroll').scrollTop = 0;
-  setTimeout(() => { if (aboutOpen) $('btnAboutClose').focus(); }, 0);
+  openModal($('about-overlay'), $('btnAboutClose'));
 }
 function hideAbout() {
   if (!aboutOpen) return;
   aboutOpen = false;
   $('about-overlay').classList.remove('show');
+  closeModal($('about-overlay'));
 }
 function renderAbout() { // rebuilt every time About opens so the figures are current
   const islands = WORLD_ISLANDS.map(isl => {
     const open = isIslandUnlocked(isl.id);
     return `<li class="about-isl${open ? '' : ' locked'}"><span class="ai-icon">${isl.icon}</span>` +
-      `<span class="ai-name">${isl.id}. ${escapeHtml(isl.name)}<span>${escapeHtml(isl.concept)}</span></span>` +
+      `<span class="ai-name">${isl.id}. ${escapeHtml(isl.name)}<span>${escapeHtml(isl.concept)}</span>` +
+      `<span class="ai-skill">${[1, 2, 3].filter(k => subStars(`${isl.id}.${k}`) >= 1).length}/3 practised: ${[1, 2, 3].map(k => `${subStars(`${isl.id}.${k}`) >= 1 ? '✔' : '○'} ${escapeHtml(STAGE_LEARNING[`${isl.id}.${k}`].construct)}`).join(' · ')}</span></span>` +
       `<span class="ai-stars">${open ? '⭐ ' + islandStars(isl.id) + '/9' : '🔒'}</span></li>`;
   }).join('');
   $('about-scroll').innerHTML = `
@@ -2820,11 +3746,14 @@ function renderAbout() { // rebuilt every time About opens so the figures are cu
     <div class="about-h">Your voyage</div>
     <ul class="about-islands">${islands}</ul>
     <div class="about-total">Total: ⭐ ${APP_STATE.totalStars}/${MAX_STARS}</div>
+    <div class="about-h">Display</div>
+    <label class="calm-toggle"><input type="checkbox" id="calmToggle"${UI.calm ? ' checked' : ''}> 🌊 Calm mode: fewer effects (no particles, shaking, pulsing or typewriter text). Captain Algo, the sea and all stars stay.</label>
     <div class="about-h">How stars work</div>
-    <p class="about-p">⭐ Clear the puzzle · ⭐⭐ Use fewer steps · ⭐⭐⭐ Use the fewest blocks</p>
+    <p class="about-p">⭐ Clear the puzzle (every goal met) · +⭐ stay within the step target · +⭐ stay within the block target. The two bonus stars are separate, so 2 stars can come from either one.</p>
     <button class="btn-primary" id="btnReplayBriefing">🧭 Replay Captain's Briefing</button>
     <div class="about-foot">Created by <b>${escapeHtml(APP_AUTHOR)}</b>, ${escapeHtml(APP_CREDIT)}.<br>Developed for learners at ${escapeHtml(APP_CREDIT)}. Built as a single-file web app – works offline and on iPad.</div>`;
   $('btnReplayBriefing').addEventListener('click', () => { hideAbout(); showBriefing(); });
+  $('calmToggle').addEventListener('change', e => setCalm(e.target.checked));
 }
 // ---------- Island tips: Captain Algo explains each island on hover (long-press on touch) ----------
 const ISLAND_BRIEFS = {
@@ -2858,7 +3787,7 @@ function showIslandTip(islandId, mode) {
   const tip = $('island-tip'), isl = WORLD_ISLANDS[islandId - 1], brief = ISLAND_BRIEFS[islandId];
   if (!isl || !brief || !UI.wmT || BRIEF.open || aboutOpen) return;
   if (!$('tip-captain').firstChild) $('tip-captain').innerHTML = CAPTAIN_SVG;
-  const unlocked = isIslandUnlocked(islandId), stars = islandStars(islandId), verb = mode === 'touch' ? 'Tap' : 'Click';
+  const unlocked = isIslandUnlocked(islandId), stars = islandStars(islandId), verb = mode === 'touch' ? 'Tap' : mode === 'keyboard' ? 'Press Enter' : 'Click';
   $('tip-title').textContent = `${isl.icon} Island ${isl.id} · ${isl.name}`;
   $('tip-concept').textContent = isl.concept;
   $('tip-objective').textContent = brief.objective;
@@ -2953,15 +3882,15 @@ function bindControls() {
     if (UI.ast.length && !confirm('Remove all blocks from the workspace?')) return;
     $('program-root').innerHTML = ''; onProgramChanged(); consoleLog('🗑 Workspace cleared.');
   });
-  $('btnHint').addEventListener('click', () => {
-    const L = currentLevel();
-    if (!UI.hintShown) { consoleLog('💡 Hint: ' + L.hint, 'info'); UI.hintShown = true; logToast('💡 Hint added to the console. Tap 💡 again for the full solution.'); return; }
-    if (RUN.running) return;
-    if (confirm('Load the reference 3-star solution into the workspace? Your current blocks will be replaced.')) { loadProgram(solutionAST(L)); consoleLog('🧩 Reference solution loaded - press ▶ Run Code.', 'info'); }
+  $('btnHint').addEventListener('click', onHintButton);
+  $('fb-close').addEventListener('click', hideFeedbackPanel);
+  $('fb-more').addEventListener('click', () => {
+    const open = $('feedback-panel').classList.toggle('expanded');
+    $('fb-more').textContent = open ? 'Less ▴' : 'Details ▾'; $('fb-more').setAttribute('aria-expanded', String(open));
   });
   const sl = $('speedSlider'); sl.value = UI.speed;
   sl.addEventListener('input', () => { UI.speed = +sl.value; saveProgressToStorage(); });
-  $('obj-head').addEventListener('click', () => { const b = $('objective-box'); b.classList.toggle('collapsed'); $('obj-toggle').textContent = b.classList.contains('collapsed') ? '▸ show' : '▾ hide'; });
+  $('obj-head').addEventListener('click', e => { if (e.target.closest('.learn-card')) return; const b = $('objective-box'); b.classList.toggle('collapsed'); const c = b.classList.contains('collapsed'); $('obj-toggle').textContent = c ? '▸ show' : '▾ hide'; $('obj-toggle').setAttribute('aria-expanded', String(!c)); });
   $('btnReplay').addEventListener('click', () => { hideVictory(); resetPuzzle(); });
   $('btnVictoryIsland').addEventListener('click', () => selectIsland(currentLevel().island));
   $('victory-overlay').addEventListener('click', e => { if (e.target.id === 'victory-overlay') hideVictory(); });
@@ -2977,7 +3906,7 @@ function bindControls() {
       else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) e.preventDefault(); // no Run shortcut, no button activation
       return;
     }
-    if (e.key === 'Escape') hideVictory();
+    if (e.key === 'Escape') { if ($('victory-overlay').classList.contains('show')) hideVictory(); else if (!$('feedback-panel').hidden) hideFeedbackPanel(); }
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && APP_STATE.currentView === 'WORKBENCH') runProgram();
   });
 }
@@ -2986,7 +3915,7 @@ function updateLayoutVars() { // lets the tabletop-fold layout put the puzzle ex
   if (h) document.documentElement.style.setProperty('--wb-header-h', h + 'px');
 }
 function frameLoop(ts) {
-  const dt = UI.last ? Math.min(0.05, (ts - UI.last) / 1000) : 0.016; UI.last = ts; UI.time += dt;
+  const dt = UI.last ? Math.min(0.05, (ts - UI.last) / 1000) : 0.016; UI.last = ts; if (!effectsReduced()) UI.time += dt; // reduced motion freezes waves, bobbing and pulsing
   try {
     if (APP_STATE.currentView === 'WORLD_MAP') drawWorldMap();
     else if (APP_STATE.currentView === 'ISLAND_VIEW') drawIslandView();
@@ -2995,8 +3924,11 @@ function frameLoop(ts) {
   requestAnimationFrame(frameLoop);
 }
 function boot() {
-  loadProgressFromStorage();
+  loadProgressFromStorage(); loadCalm();
+  if (!storageWorks()) storageWarning();
+  $('storage-warning-ok').addEventListener('click', () => { $('storage-warning').hidden = true; });
   bindCanvasNav(); bindControls(); bindOverlays(); initDragAndDrop();
+  bindKeyboardEditing(); bindCanvasCompanions(); bindModalKeys();
   APP_STATE.currentView = 'WORLD_MAP';
   updateHeaders(); renderWorldMapCanvas();
   requestAnimationFrame(frameLoop);
